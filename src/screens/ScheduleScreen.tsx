@@ -163,28 +163,28 @@ export default function ScheduleScreen({ navigation }: Props) {
   const renderMonthlyItem = useCallback(({ item: task }: any) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={styles.leftSection}>
+        <View style={[styles.leftSection, { flex: 1, marginRight: 8 }]}>
           <TouchableOpacity
             style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
             onPress={() => toggleMonthlyTask(task.id)}
           >
             {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)}>
-            <Text style={[styles.taskTitle, task.completed && styles.taskCompleted]}>{task.title}</Text>
+          <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)} style={{ flex: 1 }}>
+            <Text style={[styles.taskTitle, task.completed && styles.taskCompleted, { flexShrink: 1 }]}>{task.title}</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)} style={{ padding: 4 }}>
             <Feather name="info" size={20} color="#8A7B66" />
           </TouchableOpacity>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
           {task.completed ? (
-            <View style={styles.badgeCompleted}>
+            <View style={[styles.badgeCompleted, { flexShrink: 0 }]}>
               <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
             </View>
           ) : (
-            <View style={styles.badgePending}>
+            <View style={[styles.badgePending, { flexShrink: 0 }]}>
               <Text style={styles.badgePendingText}>{t('pending', state.language)}</Text>
             </View>
           )}
@@ -284,7 +284,7 @@ export default function ScheduleScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F6F9F9' },
   container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 , flexGrow: 1},
+  content: { paddingVertical: 20, paddingBottom: 40, paddingHorizontal: 16, flexGrow: 1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, marginTop: 10 },
   headerTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
   editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E0F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
