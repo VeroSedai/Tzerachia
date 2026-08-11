@@ -266,7 +266,7 @@ export default function ScheduleScreen({ navigation }: Props) {
   ), [state.language, viewMode, navigation, selectedDay, resetMonthlyTasks]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <FlatList
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -308,17 +308,17 @@ const styles = StyleSheet.create({
   activeDayChipText: { color: '#FFFFFF', fontWeight: '700' },
   activeDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#FFFFFF', marginTop: 2 },
   cardsList: { gap: 16 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 16, borderWidth: 1, borderColor: '#D0E3E3' },
+  card: { width: '100%', boxSizing: 'border-box' as any, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 16, borderWidth: 1, borderColor: '#D0E3E3' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  leftSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  leftSection: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8 },
   checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#A8C3C8', justifyContent: 'center', alignItems: 'center' },
   checkboxCompleted: { backgroundColor: '#00A3A1', borderColor: '#00A3A1' },
   dayLabel: { color: '#8A7B66', fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
   taskTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '600', flexShrink: 1 },
   taskCompleted: { textDecorationLine: 'line-through', color: '#A8C3C8' },
-  badgeCompleted: { backgroundColor: '#D5F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  badgeCompleted: { backgroundColor: '#D5F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, flexShrink: 0 },
   badgeCompletedText: { color: '#00A3A1', fontSize: 12, fontWeight: '700' },
-  badgePending: { backgroundColor: '#F3E8D6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  badgePending: { backgroundColor: '#F3E8D6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, flexShrink: 0 },
   badgePendingText: { color: '#8A7B66', fontSize: 12, fontWeight: '700' },
   catchAllContainer: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F0F0F0', backgroundColor: '#F3E8D6', marginHorizontal: -16, marginBottom: -16, paddingHorizontal: 16, paddingBottom: 16, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   catchAllHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
