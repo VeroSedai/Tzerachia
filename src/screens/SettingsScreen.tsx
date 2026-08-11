@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
 import { RootStackParamList } from '../types';
 import { requestNotificationPermissions, scheduleDailyReminder, cancelAllReminders } from '../services/notificationService';
+import { exportAppStatePayload, shareToTelegram } from '../utils/syncUtils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
-  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage } = useAppContext();
+  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks } = useAppContext();
   
   const [timeInput, setTimeInput] = useState(state.reminderTime || '09:00');
+  
+  // Sync Modal State
+  const [syncModalVisible, setSyncModalVisible] = useState(false);
+  const [syncTab, setSyncTab] = useState<'telegram' | 'qr'>('telegram');
+  const [isScanning, setIsScanning] = useState(false);
+  
+  // Camera Permissions
+  const [permission, requestPermission] = useCameraPermissions();
 
   const handleToggleNotifications = async (val: boolean) => {
     if (val) {
@@ -31,7 +42,6 @@ export default function SettingsScreen({ navigation }: Props) {
   };
 
   const handleTimeBlur = async () => {
-    // Validate HH:mm
     const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!regex.test(timeInput)) {
       Alert.alert("Formato non valido", "Inserisci l'ora nel formato HH:mm (es. 09:00)");
@@ -109,6 +119,34 @@ export default function SettingsScreen({ navigation }: Props) {
     );
   };
 
+  const handleScanQRCode = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert(t('sync_camera_error', state.language), t('sync_camera_permission', state.language));
+        return;
+      }
+    }
+    setIsScanning(true);
+  };
+
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    setIsScanning(false);
+    setSyncModalVisible(false);
+    
+    // Check if it's our sync URL
+    if (data.startsWith('simplyclean://sync?data=')) {
+      const payload = data.split('simplyclean://sync?data=')[1];
+      syncTasks(payload);
+    } else {
+      // Maybe it's just the payload
+      syncTasks(data);
+    }
+  };
+
+  const syncPayload = exportAppStatePayload(state);
+  const syncUrl = `simplyclean://sync?data=${syncPayload}`;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -174,6 +212,17 @@ export default function SettingsScreen({ navigation }: Props) {
 
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('data_management', state.language)}</Text>
 
+        <TouchableOpacity style={styles.settingItem} onPress={() => setSyncModalVisible(true)}>
+          <View style={[styles.iconContainer, { backgroundColor: '#E0F4FF' }]}>
+            <Feather name="refresh-cw" size={20} color="#0099FF" />
+          </View>
+          <View style={styles.settingTextContainer}>
+            <Text style={styles.settingTitle}>{t('sync_title', state.language)}</Text>
+            <Text style={styles.settingDescription}>Sincronizza lo stato con il tuo partner</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.settingItem} onPress={handleResetDaily}>
           <View style={styles.iconContainer}>
             <Feather name="rotate-ccw" size={20} color="#00A3A1" />
@@ -206,6 +255,79 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Sync Modal */}
+      <Modal visible={syncModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setSyncModalVisible(false); setIsScanning(false); }}>
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{t('sync_title', state.language)}</Text>
+            <TouchableOpacity onPress={() => { setSyncModalVisible(false); setIsScanning(false); }}>
+              <Ionicons name="close" size={24} color="#1A2F2F" />
+            </TouchableOpacity>
+          </View>
+
+          {!isScanning ? (
+            <ScrollView contentContainerStyle={styles.modalContent}>
+              <View style={styles.segmentContainer}>
+                <TouchableOpacity 
+                  style={[styles.segmentButton, syncTab === 'telegram' && styles.segmentActive]}
+                  onPress={() => setSyncTab('telegram')}
+                >
+                  <Text style={[styles.segmentText, syncTab === 'telegram' && styles.segmentTextActive]}>{t('sync_telegram', state.language)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.segmentButton, syncTab === 'qr' && styles.segmentActive]}
+                  onPress={() => setSyncTab('qr')}
+                >
+                  <Text style={[styles.segmentText, syncTab === 'qr' && styles.segmentTextActive]}>{t('sync_qr', state.language)}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {syncTab === 'telegram' ? (
+                <View style={styles.syncTabContent}>
+                  <View style={styles.previewBox}>
+                    <Text style={styles.previewText}>
+                      {state.language === 'it' ? '🧹 SimplyClean Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:\n\n' : '🧹 SimplyClean Sync\n\nI completed some chores! Click the link to sync our app:\n\n'}
+                      <Text style={{ color: '#0099FF' }}>{syncUrl.substring(0, 40)}...</Text>
+                    </Text>
+                  </View>
+                  <TouchableOpacity style={styles.primaryButton} onPress={() => shareToTelegram(state, state.language)}>
+                    <Text style={styles.primaryButtonText}>{t('sync_send_telegram', state.language)}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.syncTabContent}>
+                  <View style={styles.qrContainer}>
+                    <QRCode
+                      value={syncUrl}
+                      size={200}
+                      color="black"
+                      backgroundColor="white"
+                    />
+                  </View>
+                  <TouchableOpacity style={styles.primaryButton} onPress={handleScanQRCode}>
+                    <Text style={styles.primaryButtonText}>{t('sync_scan_qr', state.language)}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          ) : (
+            <View style={{ flex: 1 }}>
+              <CameraView 
+                style={{ flex: 1 }}
+                facing="back"
+                onBarcodeScanned={handleBarCodeScanned}
+                barcodeScannerSettings={{
+                  barcodeTypes: ["qr"],
+                }}
+              />
+              <TouchableOpacity style={styles.cancelScanButton} onPress={() => setIsScanning(false)}>
+                <Text style={styles.cancelScanText}>{t('sync_cancel', state.language)}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -215,7 +337,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E0EAE9' },
   backButton: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A2F2F' },
-  container: { padding: 20 },
+  container: { padding: 20, flexGrow: 1 },
   sectionTitle: { fontSize: 12, fontWeight: 'bold', color: '#5A6B6B', marginBottom: 16, letterSpacing: 0.5 },
   settingItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#E0EAE9' },
   dangerItem: { borderColor: '#FFEEEE', backgroundColor: '#FFFAFA' },
@@ -229,4 +351,16 @@ const styles = StyleSheet.create({
   segmentActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   segmentText: { color: '#5A6B6B', fontSize: 14, fontWeight: '600' },
   segmentTextActive: { color: '#1A2F2F', fontWeight: '800' },
+  modalSafeArea: { flex: 1, backgroundColor: '#F6F9F9' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#E0EAE9', backgroundColor: '#FFFFFF' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A2F2F' },
+  modalContent: { padding: 20, flexGrow: 1 },
+  syncTabContent: { marginTop: 24, flex: 1, alignItems: 'center' },
+  previewBox: { backgroundColor: '#E0EAE9', padding: 16, borderRadius: 16, width: '100%', marginBottom: 24 },
+  previewText: { color: '#5A6B6B', fontSize: 14, lineHeight: 22 },
+  primaryButton: { backgroundColor: '#00A3A1', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 16, width: '100%', alignItems: 'center', shadowColor: '#00A3A1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+  qrContainer: { padding: 24, backgroundColor: '#FFFFFF', borderRadius: 24, marginBottom: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  cancelScanButton: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: '#FFFFFF', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
+  cancelScanText: { color: '#1A2F2F', fontSize: 16, fontWeight: 'bold' },
 });

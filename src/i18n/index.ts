@@ -51,6 +51,17 @@ export const dictionary = {
     factory_reset: 'Factory Reset',
     factory_reset_confirm: "Questo cancellerà TUTTI i dati salvati e le guide personalizzate. L'app tornerà allo stato iniziale. Procedere?",
     language: 'LINGUA / LANGUAGE',
+
+    sync_title: 'Sincronizza di Coppia',
+    sync_telegram: 'Telegram',
+    sync_qr: 'QR Code',
+    sync_send_telegram: 'Invia su Telegram ✈️',
+    sync_scan_qr: 'Scansiona QR Partner 📷',
+    sync_camera_permission: 'Abbiamo bisogno del permesso per usare la fotocamera',
+    sync_grant_permission: 'Concedi permesso',
+    sync_camera_error: 'Errore fotocamera',
+    sync_cancel: 'Annulla',
+
     // Guides Screen
     search_guides: 'Cerca guide e ricette...',
     quick_categories: 'CATEGORIE RAPIDE',
@@ -111,6 +122,15 @@ export const dictionary = {
     factory_reset: 'Factory Reset',
     factory_reset_confirm: 'This will erase ALL saved data and custom guides. The app will return to its initial state. Proceed?',
     language: 'LANGUAGE / LINGUA',
+    sync_title: 'Partner Sync',
+    sync_telegram: 'Telegram',
+    sync_qr: 'QR Code',
+    sync_send_telegram: 'Send via Telegram ✈️',
+    sync_scan_qr: 'Scan Partner QR 📷',
+    sync_camera_permission: 'We need your permission to show the camera',
+    sync_grant_permission: 'Grant permission',
+    sync_camera_error: 'Camera error',
+    sync_cancel: 'Cancel',
     // Guides Screen
     search_guides: 'Search guides and recipes...',
     quick_categories: 'QUICK CATEGORIES',

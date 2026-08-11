@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { Vibration, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Task, Challenge, AppState, Guide, Recipe } from '../types';
+import * as Linking from 'expo-linking';
+import { importAppStatePayload } from '../utils/syncUtils';
 import { challengeData } from '../data/guidesAndRecipes';
 
 interface AppContextProps {
@@ -28,6 +30,7 @@ interface AppContextProps {
   resetDailyTasks: () => void;
   resetActiveChallenge: () => void;
   factoryReset: () => void;
+  syncTasks: (payload: string) => void;
   toggleNotifications: (enabled: boolean) => void;
   updateReminderTime: (time: string) => void;
   setLanguage: (lang: 'it' | 'en') => void;
@@ -85,6 +88,48 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(defaultState);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const syncTasks = useCallback(async (payloadString: string) => {
+    const payload = importAppStatePayload(payloadString);
+    if (!payload) {
+      Alert.alert('Errore', 'Impossibile leggere i dati di sincronizzazione.');
+      return;
+    }
+    
+    setState(prev => {
+      // Create new arrays
+      const updatedDaily = prev.dailyTasks.map(t => payload.d.includes(t.id) ? { ...t, completed: true } : t);
+      const updatedWeekly = prev.weeklyTasks.map(t => payload.w.includes(t.id) ? { ...t, completed: true } : t);
+      const updatedMonthly = prev.monthlyTasks.map(t => payload.m.includes(t.id) ? { ...t, completed: true } : t);
+      
+      safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
+      safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
+      safeSetItem(MONTHLY_KEY, updatedMonthly).catch(console.error);
+      
+      Alert.alert("Sincronizzazione Riuscita!", "Lo stato della casa è stato aggiornato.");
+      
+      return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
+    });
+  }, []);
+
+
+  useEffect(() => {
+    const handleUrl = (event: Linking.EventType) => {
+      const parsed = Linking.parse(event.url);
+      if (parsed.scheme === 'simplyclean' && parsed.path === 'sync' && parsed.queryParams?.data) {
+        const payloadStr = Array.isArray(parsed.queryParams.data) ? parsed.queryParams.data[0] : parsed.queryParams.data;
+        syncTasks(payloadStr);
+      }
+    };
+    
+    const subscription = Linking.addEventListener('url', handleUrl);
+    Linking.getInitialURL().then(url => {
+      if (url) handleUrl({ url });
+    });
+    
+    return () => subscription.remove();
+  }, []);
+
 
   useEffect(() => {
     const loadState = async () => {
@@ -457,8 +502,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     toggleNotifications,
     updateReminderTime,
     setLanguage,
+    syncTasks,
   }), [
-    state, catchAllTasks, toggleTask, reassignTaskDay, postponeTaskToFriday, startChallenge, advanceChallengeDay, setTimer, toggleTimerActive, toggleChallengeSubtask, toggleMonthlyTask, addCustomGuide, addCustomRecipe, deleteCustomGuide, deleteCustomRecipe, addCustomCategory, deleteCustomCategory, updateWeeklySchedule, resetWeeklySchedule, resetMonthlyTasks, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage
+    state, catchAllTasks, toggleTask, reassignTaskDay, postponeTaskToFriday, startChallenge, advanceChallengeDay, setTimer, toggleTimerActive, toggleChallengeSubtask, toggleMonthlyTask, addCustomGuide, addCustomRecipe, deleteCustomGuide, deleteCustomRecipe, addCustomCategory, deleteCustomCategory, updateWeeklySchedule, resetWeeklySchedule, resetMonthlyTasks, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks
   ]);
 
   return (
