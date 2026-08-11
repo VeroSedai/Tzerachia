@@ -16,13 +16,13 @@ Tzerachìa is a beautiful mobile application designed to simplify and organize d
 Here is a preview of the user interface:
 
 ### Home & Daily Routine
-![alt text](image.png)
+<img src="image.png" width="250" alt="Home Screen" />
 
 ### DIY Guides & Resources
-![alt text](image-1.png)
+<img src="image-1.png" width="250" alt="Guides Screen" />
 
 ### Weekly Schedule
-![alt text](image-2.png)
+<img src="image-2.png" width="250" alt="Weekly Schedule Screen" />
 
 ## Technologies Used
 
