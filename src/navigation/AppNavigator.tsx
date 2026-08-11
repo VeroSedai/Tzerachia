@@ -72,7 +72,7 @@ function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Today" component={TodayScreen} />
+      <Tab.Screen name="Oggi" component={TodayScreen} />
       <Tab.Screen 
         name="Schedule" 
         component={ScheduleScreen} 
@@ -86,7 +86,7 @@ function TabNavigator() {
       <Tab.Screen 
         name="GuidesStack" 
         component={GuidesStack} 
-        options={{ title: 'Guides' }} 
+        options={{ title: 'Guide' }} 
       />
     </Tab.Navigator>
   );

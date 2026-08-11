@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { Recipe, Guide } from '../types';
 import TaskItem from '../components/TaskItem';
 import TimerWidget from '../components/TimerWidget';
@@ -16,7 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GuideDetail'>;
 
 export default function GuideDetailScreen({ route, navigation }: Props) {
   const { item, type } = route.params;
-  const { toggleTimerActive, state } = useAppContext();
+  const { toggleTimerActive, state, deleteCustomGuide, deleteCustomRecipe, deleteCustomCategory } = useAppContext();
   
   // Local state for checking off ingredients or steps
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -33,6 +33,45 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
     }
   };
 
+  const isCustom = item.id.startsWith('custom-');
+
+  const handleDelete = () => {
+    const doDelete = () => {
+      if (type === 'guide') {
+        deleteCustomGuide(item.id);
+      } else {
+        deleteCustomRecipe(item.id);
+      }
+
+      // Check if we need to clean up a custom category
+      if (item.category && state.customCategories.includes(item.category)) {
+        const remainingGuides = state.customGuides.filter(g => g.id !== item.id && g.category === item.category);
+        const remainingRecipes = state.customRecipes.filter(r => r.id !== item.id && r.category === item.category);
+        if (remainingGuides.length === 0 && remainingRecipes.length === 0) {
+          deleteCustomCategory(item.category);
+        }
+      }
+
+      navigation.goBack();
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm("Sei sicuro di voler eliminare questo elemento?")) {
+        doDelete();
+      }
+      return;
+    }
+
+    Alert.alert(
+      "Elimina",
+      "Sei sicuro di voler eliminare questo elemento?",
+      [
+        { text: "Annulla", style: "cancel" },
+        { text: "Elimina", style: "destructive", onPress: doDelete }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Custom Header to go back */}
@@ -41,7 +80,13 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
           <Ionicons name="arrow-back" size={24} color="#2C3E35" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{item.title}</Text>
-        <View style={{ width: 24 }} />
+        {isCustom ? (
+          <TouchableOpacity onPress={handleDelete} style={styles.backButton}>
+            <Feather name="trash-2" size={20} color="#FF6B6B" />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>

@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function TodayScreen({ navigation }: Props) {
-  const { state, toggleTask } = useAppContext();
+  const { state, toggleTask, postponeTaskToFriday } = useAppContext();
   
   const formatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
   const dateString = formatter.format(new Date()).toUpperCase();
@@ -28,11 +28,11 @@ export default function TodayScreen({ navigation }: Props) {
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>S</Text>
+              <Text style={styles.logoText}>T</Text>
             </View>
-            <Text style={styles.appName}>Simply Clean</Text>
+            <Text style={styles.appName}>Tzerachìa</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
             <Ionicons name="settings-outline" size={24} color="#666" />
           </TouchableOpacity>
         </View>
@@ -72,20 +72,69 @@ export default function TodayScreen({ navigation }: Props) {
             <Ionicons name="sparkles-outline" size={16} color="#8A7B66" />
             <Text style={styles.focusDayName}>{dayName.toUpperCase()}</Text>
           </View>
-          <Text style={styles.focusTitle}>{focusTask ? focusTask.title : 'Solo Daily Tasks'}</Text>
+          {focusTask && !focusTask.postponed ? (
+            <TouchableOpacity 
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+              onPress={() => toggleTask(focusTask.id)}
+              activeOpacity={0.7}
+            >
+              <View style={[
+                { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#C0B3A0', marginRight: 12, justifyContent: 'center', alignItems: 'center' },
+                focusTask.completed && { backgroundColor: '#00A3A1', borderColor: '#00A3A1' }
+              ]}>
+                {focusTask.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+              </View>
+              <Text style={[styles.focusTitle, focusTask.completed && { textDecorationLine: 'line-through', color: '#8A9A9A' }]}>
+                {focusTask.title}
+              </Text>
+              {focusTask.completed && (
+                <View style={{ backgroundColor: '#E0F0F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginLeft: 12 }}>
+                  <Text style={{ color: '#00A3A1', fontSize: 10, fontWeight: 'bold' }}>Completato</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.focusTitle}>{focusTask ? focusTask.title : 'Solo Daily Tasks'}</Text>
+          )}
+
           <Text style={styles.focusDescription}>
-            {focusTask ? `Focus di oggi: ${focusTask.title}. Esegui le pulizie mirate.` : 'Oggi è giorno di riposo, mantieni solo la base.'}
+            {focusTask ? (
+              focusTask.completed 
+                ? 'Ottimo lavoro! Hai completato il focus di oggi.'
+                : `Focus di oggi: ${focusTask.title}. Esegui le pulizie mirate.`
+            ) : 'Oggi è giorno di riposo, mantieni solo la base.'}
           </Text>
 
           {focusTask && (
-            <TouchableOpacity 
-              style={styles.guideCard} 
-              onPress={() => navigation.navigate('GuidesStack')}
-            >
-              <View style={styles.guideCheckbox} />
-              <Text style={styles.guideText}>Apri guida: {focusTask.title}</Text>
-              <Ionicons name="chevron-forward" size={16} color="#8A7B66" style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
+            <View>
+              {focusTask.postponed ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAEAEA', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20, marginTop: 12 }}>
+                  <Ionicons name="calendar-outline" size={14} color="#5A6B6B" />
+                  <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '500', marginLeft: 8 }}>Rimandato al Venerdì</Text>
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity 
+                    style={styles.guideCard} 
+                    onPress={() => navigation.navigate('GuidesStack')}
+                  >
+                    <View style={styles.guideCheckbox} />
+                    <Text style={styles.guideText}>Apri guida: {focusTask.title}</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#8A7B66" style={{ marginLeft: 'auto' }} />
+                  </TouchableOpacity>
+                  
+                  {!focusTask.completed && focusTask.dayOfWeek?.toLowerCase() !== 'venerdì' && focusTask.dayOfWeek?.toLowerCase() !== 'domenica' && (
+                    <TouchableOpacity 
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingVertical: 10, backgroundColor: '#F0F4F4', borderRadius: 16, borderWidth: 1, borderColor: '#E0EAE9' }}
+                      onPress={() => postponeTaskToFriday(focusTask.id)}
+                    >
+                      <Ionicons name="time-outline" size={16} color="#5A6B6B" />
+                      <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '600', marginLeft: 6 }}>Rimanda a Venerdì</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
           )}
         </View>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, LayoutAnimation, UIManager, Platform, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../types';
@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ChallengeDetail'>;
 
 export default function ChallengeDetailScreen({ route, navigation }: Props) {
   const { challengeId } = route.params;
-  const { state, advanceChallengeDay, toggleChallengeSubtask } = useAppContext();
+  const { state, advanceChallengeDay, toggleChallengeSubtask, resetActiveChallenge } = useAppContext();
   
   const activeChallenge = state.activeChallenge;
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
@@ -39,6 +39,29 @@ export default function ChallengeDetailScreen({ route, navigation }: Props) {
   const toggleExpand = (taskId: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
+  };
+
+  const handleResetChallenge = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm("Vuoi davvero azzerare i progressi e ricominciare la sfida dal Giorno 1?")) {
+        resetActiveChallenge();
+        window.alert("La sfida è stata azzerata!");
+        navigation.navigate('MainTabs');
+      }
+      return;
+    }
+    Alert.alert(
+      "Ricomincia Sfida",
+      "Vuoi davvero azzerare i progressi e ricominciare la sfida dal Giorno 1?",
+      [
+        { text: "Annulla", style: "cancel" },
+        { text: "Ricomincia", style: "destructive", onPress: () => {
+          resetActiveChallenge();
+          Alert.alert("Successo", "La sfida è stata azzerata!");
+          navigation.navigate('MainTabs');
+        }}
+      ]
+    );
   };
 
   return (
@@ -119,6 +142,11 @@ export default function ChallengeDetailScreen({ route, navigation }: Props) {
             <Text style={styles.completeButtonText}>Completa Giorno {activeChallenge.currentDay}</Text>
           </TouchableOpacity>
         )}
+        
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetChallenge}>
+          <Feather name="rotate-ccw" size={16} color="#FF6B6B" style={{ marginRight: 6 }} />
+          <Text style={styles.resetButtonText}>Ricomincia dal Giorno 1</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -153,4 +181,6 @@ const styles = StyleSheet.create({
   subtaskTitleCompleted: { textDecorationLine: 'line-through', color: '#A8C3C8' },
   completeButton: { backgroundColor: '#00A3A1', paddingVertical: 16, borderRadius: 16, alignItems: 'center', shadowColor: '#00A3A1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   completeButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+  resetButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 24, padding: 12 },
+  resetButtonText: { color: '#FF6B6B', fontSize: 14, fontWeight: '600' }
 });

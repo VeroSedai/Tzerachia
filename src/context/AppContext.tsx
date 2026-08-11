@@ -17,11 +17,17 @@ interface AppContextProps {
   toggleChallengeSubtask: (subtaskId: string) => void;
   addCustomGuide: (guide: Guide) => void;
   addCustomRecipe: (recipe: Recipe) => void;
+  deleteCustomGuide: (id: string) => void;
+  deleteCustomRecipe: (id: string) => void;
+  addCustomCategory: (category: string) => void;
+  deleteCustomCategory: (category: string) => void;
   updateWeeklySchedule: (updates: { id: string, title: string }[]) => void;
   resetWeeklySchedule: () => void;
   resetDailyTasks: () => void;
   resetActiveChallenge: () => void;
   factoryReset: () => void;
+  toggleNotifications: (enabled: boolean) => void;
+  updateReminderTime: (time: string) => void;
 }
 
 const DAILY_KEY = '@simplyclean_daily';
@@ -30,6 +36,9 @@ const CHALLENGES_KEY = '@simplyclean_challenges';
 const LAST_DATE_KEY = '@simplyclean_last_date';
 const CUSTOM_GUIDES_KEY = '@simplyclean_custom_guides';
 const CUSTOM_RECIPES_KEY = '@simplyclean_custom_recipes';
+const CUSTOM_CATEGORIES_KEY = '@simplyclean_custom_categories';
+const NOTIFICATIONS_ENABLED_KEY = '@simplyclean_notifications_enabled';
+const REMINDER_TIME_KEY = '@simplyclean_reminder_time';
 
 const defaultState: AppState = {
   lastResetDate: new Date().toISOString().split('T')[0],
@@ -53,6 +62,9 @@ const defaultState: AppState = {
   timerActive: false,
   customGuides: [],
   customRecipes: [],
+  customCategories: [],
+  notificationsEnabled: false,
+  reminderTime: '09:00',
 };
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -64,13 +76,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [dailyStr, weeklyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr] = await Promise.all([
+        const [dailyStr, weeklyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr] = await Promise.all([
           AsyncStorage.getItem(DAILY_KEY),
           AsyncStorage.getItem(WEEKLY_KEY),
           AsyncStorage.getItem(CHALLENGES_KEY),
           AsyncStorage.getItem(LAST_DATE_KEY),
           AsyncStorage.getItem(CUSTOM_GUIDES_KEY),
-          AsyncStorage.getItem(CUSTOM_RECIPES_KEY)
+          AsyncStorage.getItem(CUSTOM_RECIPES_KEY),
+          AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY),
+          AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
+          AsyncStorage.getItem(REMINDER_TIME_KEY)
         ]);
 
         const safeParse = (str: string | null, fallback: any) => {
@@ -89,6 +104,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const activeChallenge = safeParse(challengesStr, defaultState.activeChallenge);
         const customGuides = safeParse(customGuidesStr, defaultState.customGuides);
         const customRecipes = safeParse(customRecipesStr, defaultState.customRecipes);
+        const customCategories = safeParse(customCategoriesStr, defaultState.customCategories);
+        const notificationsEnabled = safeParse(notifEnabledStr, defaultState.notificationsEnabled);
+        const reminderTime = safeParse(reminderTimeStr, defaultState.reminderTime);
         
         // Auto Reset Logic
         if (lastDateStr !== today) {
@@ -110,6 +128,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           timerActive: false,
           customGuides,
           customRecipes,
+          customCategories,
+          notificationsEnabled,
+          reminderTime,
         });
       } catch (error) {
         console.error('AsyncStorage Load Error:', error);
@@ -123,17 +144,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Global Timer Engine
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-    if (state.timerActive && state.timerDuration > 0) {
+    if (state.timerActive) {
       interval = setInterval(() => {
-        setState(prev => ({ ...prev, timerDuration: prev.timerDuration - 1 }));
+        setState(prev => {
+          if (prev.timerDuration <= 1) {
+            clearInterval(interval);
+            Vibration.vibrate([500, 500, 500]);
+            Alert.alert('Tempo scaduto! 🧹', 'Ottimo lavoro con la sessione Simply Clean!');
+            return { ...prev, timerDuration: 0, timerActive: false };
+          }
+          return { ...prev, timerDuration: prev.timerDuration - 1 };
+        });
       }, 1000);
-    } else if (state.timerDuration === 0 && state.timerActive) {
-      setState(prev => ({ ...prev, timerActive: false }));
-      Vibration.vibrate([500, 500, 500]);
-      Alert.alert('Tempo scaduto! 🧹', 'Ottimo lavoro con la sessione Simply Clean!');
     }
     return () => clearInterval(interval);
-  }, [state.timerActive, state.timerDuration]);
+  }, [state.timerActive]);
 
   // Catch-All Logic
   const catchAllTasks = useMemo(() => {
@@ -152,7 +177,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const safeSetItem = async (key: string, value: any) => {
     try {
       const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-      await safeSetItem(key, stringValue);
+      await AsyncStorage.setItem(key, stringValue);
     } catch (error) {
       console.error(`AsyncStorage Save Error for key ${key}:`, error);
     }
@@ -160,7 +185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const safeRemoveItem = async (key: string) => {
     try {
-      await safeRemoveItem(key);
+      await AsyncStorage.removeItem(key);
     } catch (error) {
       console.error(`AsyncStorage Remove Error for key ${key}:`, error);
     }
@@ -168,7 +193,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const safeClear = async () => {
     try {
-      await safeClear();
+      await AsyncStorage.clear();
     } catch (error) {
       console.error("AsyncStorage Clear Error:", error);
     }
@@ -263,6 +288,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(prev => ({ ...prev, customRecipes: updatedRecipes }));
   };
 
+  const deleteCustomGuide = async (id: string) => {
+    const updatedGuides = state.customGuides.filter(g => g.id !== id);
+    await safeSetItem(CUSTOM_GUIDES_KEY, updatedGuides);
+    setState(prev => ({ ...prev, customGuides: updatedGuides }));
+  };
+
+  const deleteCustomRecipe = async (id: string) => {
+    const updatedRecipes = state.customRecipes.filter(r => r.id !== id);
+    await safeSetItem(CUSTOM_RECIPES_KEY, updatedRecipes);
+    setState(prev => ({ ...prev, customRecipes: updatedRecipes }));
+  };
+
+  const addCustomCategory = async (category: string) => {
+    if (state.customCategories.includes(category)) return;
+    const updatedCategories = [...state.customCategories, category];
+    await safeSetItem(CUSTOM_CATEGORIES_KEY, updatedCategories);
+    setState(prev => ({ ...prev, customCategories: updatedCategories }));
+  };
+
+  const deleteCustomCategory = async (category: string) => {
+    const updatedCategories = state.customCategories.filter(c => c !== category);
+    await safeSetItem(CUSTOM_CATEGORIES_KEY, updatedCategories);
+    setState(prev => ({ ...prev, customCategories: updatedCategories }));
+  };
+
   const updateWeeklySchedule = async (updates: { id: string, title: string }[]) => {
     let updatedWeekly = [...state.weeklyTasks];
     updates.forEach(update => {
@@ -284,13 +334,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetActiveChallenge = async () => {
-    await safeRemoveItem(CHALLENGES_KEY);
-    setState(prev => ({ ...prev, activeChallenge: null }));
+    if (!state.activeChallenge) return;
+    const resetChallenge: Challenge = {
+      ...state.activeChallenge,
+      currentDay: 1,
+      status: 'active',
+      tasks: challengeData(1)
+    };
+    await safeSetItem(CHALLENGES_KEY, resetChallenge);
+    setState(prev => ({ ...prev, activeChallenge: resetChallenge }));
+  };
+
+  const toggleNotifications = async (enabled: boolean) => {
+    await safeSetItem(NOTIFICATIONS_ENABLED_KEY, enabled);
+    setState(prev => ({ ...prev, notificationsEnabled: enabled }));
+  };
+
+  const updateReminderTime = async (time: string) => {
+    await safeSetItem(REMINDER_TIME_KEY, time);
+    setState(prev => ({ ...prev, reminderTime: time }));
   };
 
   const factoryReset = async () => {
     await safeClear();
-    setState(defaultState);
+    // Use JSON parse/stringify to create a deep clone of defaultState
+    // ensuring React detects reference changes across all nested arrays/objects.
+    setState(JSON.parse(JSON.stringify(defaultState)));
   };
 
   return (
@@ -307,11 +376,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toggleChallengeSubtask,
       addCustomGuide,
       addCustomRecipe,
+      deleteCustomGuide,
+      deleteCustomRecipe,
+      addCustomCategory,
+      deleteCustomCategory,
       updateWeeklySchedule,
       resetWeeklySchedule,
       resetDailyTasks,
       resetActiveChallenge,
-      factoryReset
+      factoryReset,
+      toggleNotifications,
+      updateReminderTime
     }}>
       {children}
     </AppContext.Provider>

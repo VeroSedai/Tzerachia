@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { guides, recipes } from '../data/guidesAndRecipes';
+import { useAppContext } from '../context/AppContext';
+import { guides as defaultGuides, recipes as defaultRecipes } from '../data/guidesAndRecipes';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   { label: 'Detergenti Fai-da-te', icon: 'droplet' },
   { label: 'Speed Cleaning', icon: 'zap' },
   { label: 'Cucina', icon: 'coffee' },
@@ -17,17 +18,26 @@ interface Props {
 }
 
 export default function GuidesScreen({ navigation }: Props) {
+  const { state } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const filteredRecipes = recipes.filter(r => 
+  const CATEGORIES = [
+    ...DEFAULT_CATEGORIES,
+    ...state.customCategories.map(c => ({ label: c, icon: 'folder' }))
+  ];
+
+  const allRecipes = [...defaultRecipes, ...state.customRecipes];
+  const allGuides = [...defaultGuides, ...state.customGuides];
+
+  const filteredRecipes = allRecipes.filter(r => 
     r.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-    (!activeCategory || activeCategory === 'Detergenti Fai-da-te')
+    (!activeCategory || r.category === activeCategory)
   );
 
-  const filteredGuides = guides.filter(g => 
+  const filteredGuides = allGuides.filter(g => 
     g.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-    (!activeCategory || activeCategory !== 'Detergenti Fai-da-te')
+    (!activeCategory || g.category === activeCategory)
   );
 
   return (
@@ -39,14 +49,23 @@ export default function GuidesScreen({ navigation }: Props) {
             <View style={styles.logoCircle}>
               <Text style={styles.logoText}>S</Text>
             </View>
-            <Text style={styles.appName}>Simply Clean</Text>
+            <Text style={styles.appName}>Tzerachìa</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
             <Ionicons name="settings-outline" size={24} color="#666" />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.screenTitle}>Guide & Risorse</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <Text style={[styles.screenTitle, { marginBottom: 0 }]}>Guide & Risorse</Text>
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
+            onPress={() => navigation.navigate('AddGuide')}
+          >
+            <Ionicons name="add" size={16} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>Aggiungi</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>

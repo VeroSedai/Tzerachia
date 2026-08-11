@@ -8,6 +8,7 @@ export default function TimerWidget() {
   
   const minutes = Math.floor(state.timerDuration / 60);
   const seconds = state.timerDuration % 60;
+  const progressPercent = Math.max(0, Math.min(100, (state.timerDuration / (15 * 60)) * 100));
 
   return (
     <View style={styles.container}>
@@ -20,7 +21,7 @@ export default function TimerWidget() {
       </Text>
       
       <View style={styles.progressBarBg}>
-        <View style={[styles.progressBarFill, { width: '100%' }]} />
+        <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
       </View>
 
       <View style={styles.buttonRow}>

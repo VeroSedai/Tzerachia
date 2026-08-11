@@ -13,8 +13,14 @@ const DAYS = [
   { short: 'DOM', key: 'Domenica' },
 ];
 
-export default function ScheduleScreen() {
-  const { state, toggleTask } = useAppContext();
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+interface Props {
+  navigation: NativeStackNavigationProp<any, any>;
+}
+
+export default function ScheduleScreen({ navigation }: Props) {
+  const { state, toggleTask, postponeTaskToFriday } = useAppContext();
   
   const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; 
   const [selectedDay, setSelectedDay] = useState(currentDayIndex);
@@ -32,7 +38,10 @@ export default function ScheduleScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>CALENDARIO SETTIMANALE</Text>
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => navigation.navigate('EditSchedule')}
+          >
             <Feather name="edit-2" size={12} color="#1A2F2F" />
             <Text style={styles.editButtonText}>Modifica</Text>
           </TouchableOpacity>
@@ -65,8 +74,8 @@ export default function ScheduleScreen() {
             const dayTasks = state.weeklyTasks.filter(t => t.dayOfWeek?.toLowerCase() === dayInfo.key.toLowerCase());
             
             const itemsToRender = isSunday 
-              ? [{ id: 'domenica-task', taskName: 'Solo Daily Tasks', completed: false, day: dayInfo.key }]
-              : dayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key }));
+              ? [{ id: 'domenica-task', taskName: 'Solo Daily Tasks', completed: false, day: dayInfo.key, postponed: false }]
+              : dayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key, postponed: t.postponed }));
 
             return itemsToRender.map(item => (
               <View key={`${dayInfo.key}-${item.id}`} style={styles.card}>
@@ -93,12 +102,26 @@ export default function ScheduleScreen() {
                     <View style={styles.badgeCompleted}>
                       <Text style={styles.badgeCompletedText}>Completato</Text>
                     </View>
+                  ) : item.postponed ? (
+                    <View style={[styles.badgePending, { backgroundColor: '#E0EAE9' }]}>
+                      <Text style={[styles.badgePendingText, { color: '#5A6B6B' }]}>Rimandato</Text>
+                    </View>
                   ) : (
                     <View style={styles.badgePending}>
                       <Text style={styles.badgePendingText}>In corso</Text>
                     </View>
                   )}
                 </TouchableOpacity>
+
+                {!item.completed && !item.postponed && !isSunday && !isCatchAllDay && (
+                  <TouchableOpacity 
+                    style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#F0F4F4', borderRadius: 12, alignSelf: 'flex-start' }}
+                    onPress={() => postponeTaskToFriday(item.id)}
+                  >
+                    <Feather name="clock" size={14} color="#5A6B6B" />
+                    <Text style={{ fontSize: 12, color: '#5A6B6B', fontWeight: 'bold', marginLeft: 6 }}>Rimanda a Venerdì</Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Special Catch-All Box for Friday */}
                 {isCatchAllDay && (

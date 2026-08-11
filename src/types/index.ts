@@ -65,6 +65,9 @@ export interface AppState {
   timerActive: boolean;
   customGuides: Guide[];
   customRecipes: Recipe[];
+  customCategories: string[];
+  notificationsEnabled: boolean;
+  reminderTime: string; // HH:mm format
 }
 
 export type RootStackParamList = {

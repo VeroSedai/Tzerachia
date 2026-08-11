@@ -9,11 +9,18 @@ interface Props {
 }
 
 export default function AddGuideScreen({ navigation }: Props) {
-  const { addCustomGuide, addCustomRecipe } = useAppContext();
+  const { state, addCustomGuide, addCustomRecipe, addCustomCategory } = useAppContext();
   
   const [type, setType] = useState<'guide' | 'recipe'>('guide');
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState<string>('Detergenti Fai-da-te');
+  const [isNewCategory, setIsNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [items, setItems] = useState<string[]>(['']);
+
+  const baseCategories = ['Detergenti Fai-da-te', 'Speed Cleaning', 'Cucina', 'Bagno', 'Tessili & Divani'];
+  // Combine base categories, custom ones, and the special "+ Nuova Categoria"
+  const CATEGORIES = [...new Set([...baseCategories, ...state.customCategories]), '+ Nuova Categoria'];
 
   const handleAddItem = () => {
     setItems([...items, '']);
@@ -35,21 +42,38 @@ export default function AddGuideScreen({ navigation }: Props) {
     const filteredItems = items.filter(i => i.trim() !== '');
     if (filteredItems.length === 0) return;
 
+    let finalCategory = category;
+    if (category === '+ Nuova Categoria') {
+      if (!newCategoryName.trim()) return;
+      finalCategory = newCategoryName.trim();
+      addCustomCategory(finalCategory);
+    }
+
     const id = `custom-${Date.now()}`;
 
     if (type === 'guide') {
       addCustomGuide({
         id,
         title,
+        category: finalCategory,
         steps: filteredItems.map((desc, i) => ({ step: i + 1, description: desc }))
       });
     } else {
       addCustomRecipe({
         id,
         title,
+        category: finalCategory,
         ingredients: filteredItems
       });
     }
+
+    // Reset local state
+    setTitle('');
+    setCategory('Detergenti Fai-da-te');
+    setIsNewCategory(false);
+    setNewCategoryName('');
+    setItems(['']);
+    setType('guide');
 
     navigation.goBack();
   };
@@ -91,6 +115,32 @@ export default function AddGuideScreen({ navigation }: Props) {
             value={title}
             onChangeText={setTitle}
           />
+
+          <Text style={styles.label}>Categoria</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: category === '+ Nuova Categoria' ? 12 : 20 }}>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity 
+                key={cat} 
+                style={[
+                  { backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: '#E0EAE9', marginRight: 8 },
+                  category === cat && { backgroundColor: '#00A3A1', borderColor: '#00A3A1' }
+                ]}
+                onPress={() => setCategory(cat)}
+              >
+                <Text style={[{ color: '#1A2F2F', fontSize: 13, fontWeight: '500' }, category === cat && { color: '#FFFFFF' }]}>{cat}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {category === '+ Nuova Categoria' && (
+            <TextInput
+              style={[styles.input, { marginBottom: 20 }]}
+              placeholder="Inserisci il nome della nuova categoria..."
+              placeholderTextColor="#8A9A9A"
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+            />
+          )}
 
           <Text style={styles.label}>{type === 'guide' ? 'Passaggi' : 'Ingredienti'}</Text>
           {items.map((item, index) => (
