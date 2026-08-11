@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, FlatList } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
 import { guides as defaultGuides } from '../data/guidesAndRecipes';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const DAYS = [
   { short: 'LUN', key: 'Lunedì' },
@@ -15,11 +16,80 @@ const DAYS = [
   { short: 'DOM', key: 'Domenica' },
 ];
 
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 interface Props {
   navigation: NativeStackNavigationProp<any, any>;
 }
+
+// Memoized Task Item Component
+const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMissedTasks, language, toggleTask, postponeTaskToFriday }: any) => {
+  return (
+    <View style={styles.card}>
+      <TouchableOpacity 
+        style={styles.cardHeader} 
+        onPress={() => { if (!isSunday) toggleTask(item.id); }}
+        activeOpacity={isSunday ? 1 : 0.7}
+      >
+        <View style={styles.leftSection}>
+          <TouchableOpacity
+            style={[styles.checkbox, item.completed && styles.checkboxCompleted]}
+            onPress={() => { if (!isSunday) toggleTask(item.id); }}
+            activeOpacity={isSunday ? 1 : 0.7}
+          >
+            {item.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.dayLabel}>{item.day.toUpperCase()}</Text>
+            <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]}>{item.taskName}</Text>
+          </View>
+        </View>
+
+        {item.completed ? (
+          <View style={styles.badgeCompleted}>
+            <Text style={styles.badgeCompletedText}>{t('completed', language)}</Text>
+          </View>
+        ) : item.postponed ? (
+          <View style={[styles.badgePending, { backgroundColor: '#E0EAE9' }]}>
+            <Text style={[styles.badgePendingText, { color: '#5A6B6B' }]}>{t('postponed', language)}</Text>
+          </View>
+        ) : (
+          <View style={styles.badgePending}>
+            <Text style={styles.badgePendingText}>{t('in_progress', language)}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      {!item.completed && !item.postponed && !isSunday && !isCatchAllDay && (
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#F0F4F4', borderRadius: 12, alignSelf: 'flex-start' }}
+          onPress={() => postponeTaskToFriday(item.id)}
+        >
+          <Feather name="clock" size={14} color="#5A6B6B" />
+          <Text style={{ fontSize: 12, color: '#5A6B6B', fontWeight: 'bold', marginLeft: 6 }}>{t('postpone_to_friday', language)}</Text>
+        </TouchableOpacity>
+      )}
+
+      {isCatchAllDay && (
+        <View style={styles.catchAllContainer}>
+          <View style={styles.catchAllHeader}>
+            <Feather name="inbox" size={16} color="#8A7B66" />
+            <Text style={styles.catchAllTitle}>{t('catch_all_friday', language)}</Text>
+          </View>
+          <Text style={styles.catchAllSubtitle}>{t('catch_all_subtitle', language)}</Text>
+
+          {pastMissedTasks && pastMissedTasks.length > 0 ? (
+            pastMissedTasks.map((task: any) => (
+              <View key={`catchall-${task.id}`} style={styles.catchAllItem}>
+                <Text style={styles.catchAllItemText}>• {task.title} ({task.dayOfWeek})</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.catchAllEmpty}>{t('no_missed_tasks', language)}</Text>
+          )}
+        </View>
+      )}
+    </View>
+  );
+});
 
 export default function ScheduleScreen({ navigation }: Props) {
   const { state, toggleTask, postponeTaskToFriday, toggleMonthlyTask, resetMonthlyTasks } = useAppContext();
@@ -36,7 +106,7 @@ export default function ScheduleScreen({ navigation }: Props) {
     'm5': 'macchina-caffe'
   };
 
-  const handleOpenMonthlyGuide = (taskId: string) => {
+  const handleOpenMonthlyGuide = useCallback((taskId: string) => {
     const guideId = monthlyGuideIds[taskId];
     if (guideId) {
       const guide = defaultGuides.find(g => g.id === guideId);
@@ -47,49 +117,110 @@ export default function ScheduleScreen({ navigation }: Props) {
         });
       }
     }
-  };
+  }, [navigation]);
 
-  const pastMissedTasks = state.weeklyTasks.filter(t => {
+  const pastMissedTasks = useMemo(() => state.weeklyTasks.filter(t => {
     if (t.completed || t.type === 'catch-all') return false;
     const taskDayIndex = DAYS.findIndex(d => d.key.toLowerCase() === t.dayOfWeek?.toLowerCase());
-    return taskDayIndex !== -1 && taskDayIndex < 4; // Monday to Thursday
-  });
+    return taskDayIndex !== -1 && taskDayIndex < 4;
+  }), [state.weeklyTasks]);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>{t('planning', state.language)}</Text>
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => navigation.navigate('EditSchedule')}
+  const weeklyData = useMemo(() => {
+    return DAYS.map(dayInfo => {
+      const isCatchAllDay = dayInfo.key === 'Venerdì';
+      const isSunday = dayInfo.key === 'Domenica';
+      const dayTasks = state.weeklyTasks.filter(t => t.dayOfWeek?.toLowerCase() === dayInfo.key.toLowerCase());
+      
+      const items = isSunday 
+        ? [{ id: 'domenica-task', taskName: 'Solo Daily Tasks', completed: false, day: dayInfo.key, postponed: false }]
+        : dayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key, postponed: t.postponed }));
+
+      return { dayInfo, isCatchAllDay, isSunday, items };
+    });
+  }, [state.weeklyTasks]);
+
+  const renderWeeklyItem = useCallback(({ item }: any) => {
+    return (
+      <View style={styles.cardsList}>
+        {item.items.map((taskItem: any) => (
+          <TaskItem 
+            key={`${item.dayInfo.key}-${taskItem.id}`}
+            item={taskItem}
+            dayInfo={item.dayInfo}
+            isSunday={item.isSunday}
+            isCatchAllDay={item.isCatchAllDay}
+            pastMissedTasks={pastMissedTasks}
+            language={state.language}
+            toggleTask={toggleTask}
+            postponeTaskToFriday={postponeTaskToFriday}
+          />
+        ))}
+      </View>
+    );
+  }, [pastMissedTasks, state.language, toggleTask, postponeTaskToFriday]);
+
+  const renderMonthlyItem = useCallback(({ item: task }: any) => (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.leftSection}>
+          <TouchableOpacity
+            style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+            onPress={() => toggleMonthlyTask(task.id)}
           >
-            <Feather name="edit-2" size={12} color="#1A2F2F" />
-            <Text style={styles.editButtonText}>{t('edit', state.language)}</Text>
+            {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)}>
+            <Text style={[styles.taskTitle, task.completed && styles.taskCompleted]}>{task.title}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Segmented Control */}
-        <View style={styles.segmentContainer}>
-          <TouchableOpacity 
-            style={[styles.segmentButton, viewMode === 'weekly' && styles.segmentActive]}
-            onPress={() => setViewMode('weekly')}
-          >
-            <Text style={[styles.segmentText, viewMode === 'weekly' && styles.segmentTextActive]}>{t('weekly', state.language)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)} style={{ padding: 4 }}>
+            <Feather name="info" size={20} color="#8A7B66" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.segmentButton, viewMode === 'monthly' && styles.segmentActive]}
-            onPress={() => setViewMode('monthly')}
-          >
-            <Text style={[styles.segmentText, viewMode === 'monthly' && styles.segmentTextActive]}>{t('monthly', state.language)}</Text>
-          </TouchableOpacity>
+          {task.completed ? (
+            <View style={styles.badgeCompleted}>
+              <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
+            </View>
+          ) : (
+            <View style={styles.badgePending}>
+              <Text style={styles.badgePendingText}>{t('pending', state.language)}</Text>
+            </View>
+          )}
         </View>
+      </View>
+    </View>
+  ), [state.language, handleOpenMonthlyGuide, toggleMonthlyTask]);
 
-        {viewMode === 'weekly' ? (
-          <>
-            {/* Days Filter Bar */}
+  const ListHeader = useCallback(() => (
+    <>
+      <View style={styles.headerRow}>
+        <Text style={styles.headerTitle}>{t('planning', state.language)}</Text>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={() => navigation.navigate('EditSchedule')}
+        >
+          <Feather name="edit-2" size={12} color="#1A2F2F" />
+          <Text style={styles.editButtonText}>{t('edit', state.language)}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.segmentContainer}>
+        <TouchableOpacity 
+          style={[styles.segmentButton, viewMode === 'weekly' && styles.segmentActive]}
+          onPress={() => setViewMode('weekly')}
+        >
+          <Text style={[styles.segmentText, viewMode === 'weekly' && styles.segmentTextActive]}>{t('weekly', state.language)}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.segmentButton, viewMode === 'monthly' && styles.segmentActive]}
+          onPress={() => setViewMode('monthly')}
+        >
+          <Text style={[styles.segmentText, viewMode === 'monthly' && styles.segmentTextActive]}>{t('monthly', state.language)}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {viewMode === 'weekly' && (
         <View style={styles.daysBarWrapper}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daysBar}>
             {DAYS.map((day, index) => {
@@ -107,146 +238,44 @@ export default function ScheduleScreen({ navigation }: Props) {
             })}
           </ScrollView>
         </View>
+      )}
 
-        {/* Tasks List */}
-        <View style={styles.cardsList}>
-          {DAYS.map((dayInfo) => {
-            const isCatchAllDay = dayInfo.key === 'Venerdì';
-            const isSunday = dayInfo.key === 'Domenica';
-            const dayTasks = state.weeklyTasks.filter(t => t.dayOfWeek?.toLowerCase() === dayInfo.key.toLowerCase());
-            
-            const itemsToRender = isSunday 
-              ? [{ id: 'domenica-task', taskName: 'Solo Daily Tasks', completed: false, day: dayInfo.key, postponed: false }]
-              : dayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key, postponed: t.postponed }));
-
-            return itemsToRender.map(item => (
-              <View key={`${dayInfo.key}-${item.id}`} style={styles.card}>
-                <TouchableOpacity 
-                  style={styles.cardHeader} 
-                  onPress={() => { if (!isSunday) toggleTask(item.id); }}
-                  activeOpacity={isSunday ? 1 : 0.7}
-                >
-                  <View style={styles.leftSection}>
-                    <TouchableOpacity
-                      style={[styles.checkbox, item.completed && styles.checkboxCompleted]}
-                      onPress={() => { if (!isSunday) toggleTask(item.id); }}
-                      activeOpacity={isSunday ? 1 : 0.7}
-                    >
-                      {item.completed && <Feather name="check" size={14} color="#FFFFFF" />}
-                    </TouchableOpacity>
-                    <View>
-                      <Text style={styles.dayLabel}>{item.day.toUpperCase()}</Text>
-                      <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]}>{item.taskName}</Text>
-                    </View>
-                  </View>
-
-                  {item.completed ? (
-                    <View style={styles.badgeCompleted}>
-                      <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
-                    </View>
-                  ) : item.postponed ? (
-                    <View style={[styles.badgePending, { backgroundColor: '#E0EAE9' }]}>
-                      <Text style={[styles.badgePendingText, { color: '#5A6B6B' }]}>{t('postponed', state.language)}</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.badgePending}>
-                      <Text style={styles.badgePendingText}>{t('in_progress', state.language)}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                {!item.completed && !item.postponed && !isSunday && !isCatchAllDay && (
-                  <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#F0F4F4', borderRadius: 12, alignSelf: 'flex-start' }}
-                    onPress={() => postponeTaskToFriday(item.id)}
-                  >
-                    <Feather name="clock" size={14} color="#5A6B6B" />
-                    <Text style={{ fontSize: 12, color: '#5A6B6B', fontWeight: 'bold', marginLeft: 6 }}>{t('postpone_to_friday', state.language)}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {/* Special Catch-All Box for Friday */}
-                {isCatchAllDay && (
-                  <View style={styles.catchAllContainer}>
-                    <View style={styles.catchAllHeader}>
-                      <Feather name="inbox" size={16} color="#8A7B66" />
-                      <Text style={styles.catchAllTitle}>{t('catch_all_friday', state.language)}</Text>
-                    </View>
-                    <Text style={styles.catchAllSubtitle}>{t('catch_all_subtitle', state.language)}</Text>
-
-                    {pastMissedTasks && pastMissedTasks.length > 0 ? (
-                      pastMissedTasks.map((task) => (
-                        <View key={`catchall-${task.id}`} style={styles.catchAllItem}>
-                          <Text style={styles.catchAllItemText}>• {task.title} ({task.dayOfWeek})</Text>
-                        </View>
-                      ))
-                    ) : (
-                      <Text style={styles.catchAllEmpty}>{t('no_missed_tasks', state.language)}</Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            ));
-          })}
+      {viewMode === 'monthly' && (
+        <View style={styles.monthlyContainer}>
+          <View style={styles.monthlyHeader}>
+            <Text style={styles.monthlyTitle}>{t('monthly_tasks', state.language)}</Text>
+            <TouchableOpacity onPress={() => {
+              if (window.confirm) {
+                if (window.confirm(t('reset_monthly_confirm', state.language))) resetMonthlyTasks();
+              } else {
+                Alert.alert(t('reset_monthly', state.language), t('reset_monthly_confirm', state.language), [
+                  { text: t('cancel', state.language), style: "cancel" },
+                  { text: t('reset', state.language), style: "destructive", onPress: resetMonthlyTasks }
+                ]);
+              }
+            }} style={styles.resetButton}>
+              <Feather name="rotate-ccw" size={14} color="#8A7B66" />
+              <Text style={styles.resetButtonText}>{t('reset', state.language)}</Text>
+            </TouchableOpacity>
           </View>
-          </>
-        ) : (
-          <View style={styles.monthlyContainer}>
-            <View style={styles.monthlyHeader}>
-              <Text style={styles.monthlyTitle}>{t('monthly_tasks', state.language)}</Text>
-              <TouchableOpacity onPress={() => {
-                if (window.confirm) {
-                  if (window.confirm(t('reset_monthly_confirm', state.language))) resetMonthlyTasks();
-                } else {
-                  Alert.alert(t('reset_monthly', state.language), t('reset_monthly_confirm', state.language), [
-                    { text: t('cancel', state.language), style: "cancel" },
-                    { text: t('reset', state.language), style: "destructive", onPress: resetMonthlyTasks }
-                  ]);
-                }
-              }} style={styles.resetButton}>
-                <Feather name="rotate-ccw" size={14} color="#8A7B66" />
-                <Text style={styles.resetButtonText}>{t('reset', state.language)}</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.monthlySubtitle}>{t('monthly_subtitle', state.language)}</Text>
-            
-            <View style={styles.cardsList}>
-              {state.monthlyTasks.map(task => (
-                <View key={task.id} style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <View style={styles.leftSection}>
-                      <TouchableOpacity
-                        style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
-                        onPress={() => toggleMonthlyTask(task.id)}
-                      >
-                        {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)}>
-                        <Text style={[styles.taskTitle, task.completed && styles.taskCompleted]}>{task.title}</Text>
-                      </TouchableOpacity>
-                    </View>
+          <Text style={styles.monthlySubtitle}>{t('monthly_subtitle', state.language)}</Text>
+        </View>
+      )}
+    </>
+  ), [state.language, viewMode, navigation, selectedDay, resetMonthlyTasks]);
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)} style={{ padding: 4 }}>
-                        <Feather name="info" size={20} color="#8A7B66" />
-                      </TouchableOpacity>
-                      {task.completed ? (
-                        <View style={styles.badgeCompleted}>
-                          <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
-                        </View>
-                      ) : (
-                        <View style={styles.badgePending}>
-                          <Text style={styles.badgePendingText}>{t('pending', state.language)}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-      </ScrollView>
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        data={viewMode === 'weekly' ? weeklyData : state.monthlyTasks}
+        keyExtractor={(item: any) => viewMode === 'weekly' ? item.dayInfo.key : item.id}
+        renderItem={viewMode === 'weekly' ? renderWeeklyItem : renderMonthlyItem}
+        ListHeaderComponent={ListHeader}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+      />
     </SafeAreaView>
   );
 }

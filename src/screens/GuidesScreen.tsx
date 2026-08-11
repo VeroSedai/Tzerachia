@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, SectionList } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -18,130 +18,133 @@ interface Props {
   navigation: NativeStackNavigationProp<any, any>;
 }
 
+const GuideItem = React.memo(({ item, type, navigation }: any) => (
+  <TouchableOpacity 
+    style={styles.card}
+    onPress={() => navigation.navigate('GuideDetail', { item, type })}
+  >
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      {type === 'recipe' ? (
+        <Text style={styles.cardSubtitle}>Aceto & Olii essenziali</Text>
+      ) : item.duration ? (
+        <Text style={styles.cardSubtitle}>{item.duration}</Text>
+      ) : null}
+    </View>
+    <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
+  </TouchableOpacity>
+));
+
 export default function GuidesScreen({ navigation }: Props) {
   const { state } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const CATEGORIES = [
+  const CATEGORIES = useMemo(() => [
     ...DEFAULT_CATEGORIES,
     ...state.customCategories.map(c => ({ label: c, icon: 'folder' }))
-  ];
+  ], [state.customCategories]);
 
-  const allRecipes = [...defaultRecipes, ...state.customRecipes];
-  const allGuides = [...defaultGuides, ...state.customGuides];
+  const sections = useMemo(() => {
+    const allRecipes = [...defaultRecipes, ...state.customRecipes];
+    const allGuides = [...defaultGuides, ...state.customGuides];
+    
+    const filteredRecipes = allRecipes.filter(r => 
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+      (!activeCategory || r.category === activeCategory)
+    );
+  
+    const filteredGuides = allGuides.filter(g => 
+      g.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+      (!activeCategory || g.category === activeCategory)
+    );
 
-  const filteredRecipes = allRecipes.filter(r => 
-    r.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-    (!activeCategory || r.category === activeCategory)
-  );
+    const result = [];
+    if (filteredGuides.length > 0) {
+      result.push({ title: t('cleaning_guides', state.language).toUpperCase(), data: filteredGuides, type: 'guide' });
+    }
+    if (filteredRecipes.length > 0) {
+      result.push({ title: t('recipes', state.language).toUpperCase(), data: filteredRecipes, type: 'recipe' });
+    }
+    return result;
+  }, [state.customRecipes, state.customGuides, searchQuery, activeCategory, state.language]);
 
-  const filteredGuides = allGuides.filter(g => 
-    g.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-    (!activeCategory || g.category === activeCategory)
-  );
+  const renderItem = useCallback(({ item, section }: any) => {
+    return <GuideItem item={item} type={section.type} navigation={navigation} />;
+  }, [navigation]);
+
+  const renderSectionHeader = useCallback(({ section: { title } }: any) => (
+    <Text style={[styles.sectionTitle, { marginTop: title.includes('RICETTE') ? 24 : 0 }]}>{title}</Text>
+  ), []);
+
+  const ListHeader = useCallback(() => (
+    <>
+      <View style={styles.headerRow}>
+        <View style={styles.logoRow}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoText}>S</Text>
+          </View>
+          <Text style={styles.appName}>Tzerachìa</Text>
+        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+          <Ionicons name="settings-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Text style={[styles.screenTitle, { marginBottom: 0 }]}>{t('tab_guides', state.language)}</Text>
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
+          onPress={() => navigation.navigate('AddGuide')}
+        >
+          <Ionicons name="add" size={16} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>{t('add_guide', state.language)}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder={t('search_guides', state.language)}
+          placeholderTextColor="#8A9A9A"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      <Text style={styles.sectionTitle}>{t('quick_categories', state.language)}</Text>
+      <View style={styles.categoriesWrapper}>
+        {CATEGORIES.map(cat => (
+          <TouchableOpacity
+            key={cat.label}
+            style={[styles.categoryChip, activeCategory === cat.label && styles.categoryChipActive]}
+            onPress={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
+          >
+            <Feather name={cat.icon as any} size={14} color={activeCategory === cat.label ? '#FFFFFF' : '#1A2F2F'} style={{ marginRight: 6 }} />
+            <Text style={[styles.categoryText, activeCategory === cat.label && styles.categoryTextActive]}>
+              {cat.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </>
+  ), [state.language, navigation, searchQuery, CATEGORIES, activeCategory]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <View style={styles.logoRow}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>S</Text>
-            </View>
-            <Text style={styles.appName}>Tzerachìa</Text>
-          </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-            <Ionicons name="settings-outline" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <Text style={[styles.screenTitle, { marginBottom: 0 }]}>{t('tab_guides', state.language)}</Text>
-          <TouchableOpacity 
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
-            onPress={() => navigation.navigate('AddGuide')}
-          >
-            <Ionicons name="add" size={16} color="#FFFFFF" />
-            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>{t('add_guide', state.language)}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('search_guides', state.language)}
-            placeholderTextColor="#8A9A9A"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
-          {/* Categories */}
-          <Text style={styles.sectionTitle}>{t('quick_categories', state.language)}</Text>
-          <View style={styles.categoriesWrapper}>
-            {CATEGORIES.map(cat => (
-              <TouchableOpacity
-                key={cat.label}
-                style={[styles.categoryChip, activeCategory === cat.label && styles.categoryChipActive]}
-                onPress={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
-              >
-                <Feather name={cat.icon as any} size={14} color={activeCategory === cat.label ? '#FFFFFF' : '#1A2F2F'} style={{ marginRight: 6 }} />
-                <Text style={[styles.categoryText, activeCategory === cat.label && styles.categoryTextActive]}>
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* List */}
-          {filteredGuides.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>{t('cleaning_guides', state.language).toUpperCase()}</Text>
-              <View style={styles.listContainer}>
-                {filteredGuides.map(guide => (
-                  <TouchableOpacity 
-                    key={guide.id} 
-                    style={styles.card}
-                    onPress={() => navigation.navigate('GuideDetail', { item: guide, type: 'guide' })}
-                  >
-                    <View style={styles.cardContent}>
-                      <Text style={styles.cardTitle}>{guide.title}</Text>
-                      {guide.duration && <Text style={styles.cardSubtitle}>{guide.duration}</Text>}
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          )}
-
-          {filteredRecipes.length > 0 && (
-            <>
-              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('recipes', state.language).toUpperCase()}</Text>
-              <View style={styles.listContainer}>
-                {filteredRecipes.map(recipe => (
-                  <TouchableOpacity 
-                    key={recipe.id} 
-                    style={styles.card}
-                    onPress={() => navigation.navigate('GuideDetail', { item: recipe, type: 'recipe' })}
-                  >
-                    <View style={styles.cardContent}>
-                      <Text style={styles.cardTitle}>{recipe.title}</Text>
-                      <Text style={styles.cardSubtitle}>Aceto & Olii essenziali</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          )}
-        </ScrollView>
-      </View>
+      <SectionList<any, any>
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        sections={sections}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        ListHeaderComponent={ListHeader}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        SectionSeparatorComponent={() => <View style={{ height: 12 }} />}
+      />
     </SafeAreaView>
   );
 }
@@ -244,9 +247,6 @@ const styles = StyleSheet.create({
   },
   categoryTextActive: {
     color: '#FFFFFF',
-  },
-  listContainer: {
-    gap: 12,
   },
   card: {
     backgroundColor: '#FFFFFF',
