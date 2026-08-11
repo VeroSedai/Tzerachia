@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, SectionList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -265,10 +266,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1A2F2F',
+    flexShrink: 1,
   },
   cardSubtitle: {
     fontSize: 13,
     color: '#8A9A9A',
     marginTop: 4,
+    flexShrink: 1,
   },
 });

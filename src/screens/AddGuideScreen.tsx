@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -117,7 +118,7 @@ export default function AddGuideScreen({ navigation }: Props) {
           />
 
           <Text style={styles.label}>Categoria</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: category === '+ Nuova Categoria' ? 12 : 20 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: category === '+ Nuova Categoria' ? 12 : 20 }} contentContainerStyle={{ flexGrow: 1 }}>
             {CATEGORIES.map(cat => (
               <TouchableOpacity 
                 key={cat} 

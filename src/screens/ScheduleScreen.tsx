@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
@@ -37,9 +38,9 @@ const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMisse
           >
             {item.completed && <Feather name="check" size={14} color="#FFFFFF" />}
           </TouchableOpacity>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.dayLabel}>{item.day.toUpperCase()}</Text>
-            <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]}>{item.taskName}</Text>
+            <Text style={[styles.taskTitle, item.completed && styles.taskCompleted, { flexShrink: 1 }]}>{item.taskName}</Text>
           </View>
         </View>
 
@@ -222,7 +223,7 @@ export default function ScheduleScreen({ navigation }: Props) {
 
       {viewMode === 'weekly' && (
         <View style={styles.daysBarWrapper}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daysBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daysBar} contentContainerStyle={{ flexGrow: 1 }}>
             {DAYS.map((day, index) => {
               const isActive = selectedDay === index;
               return (
@@ -283,7 +284,7 @@ export default function ScheduleScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F6F9F9' },
   container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 40 , flexGrow: 1},
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, marginTop: 10 },
   headerTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
   editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E0F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
   checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#A8C3C8', justifyContent: 'center', alignItems: 'center' },
   checkboxCompleted: { backgroundColor: '#00A3A1', borderColor: '#00A3A1' },
   dayLabel: { color: '#8A7B66', fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
-  taskTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '600' },
+  taskTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '600', flexShrink: 1 },
   taskCompleted: { textDecorationLine: 'line-through', color: '#A8C3C8' },
   badgeCompleted: { backgroundColor: '#D5F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
   badgeCompletedText: { color: '#00A3A1', fontSize: 12, fontWeight: '700' },
