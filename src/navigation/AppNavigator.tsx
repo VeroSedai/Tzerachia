@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TodayScreen from '../screens/TodayScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -44,6 +45,7 @@ function ChallengesStack() {
 
 function TabNavigator() {
   const { state } = useAppContext();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -55,8 +57,8 @@ function TabNavigator() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
-          height: 60,
-          paddingBottom: 5,
+          height: 60 + Math.max(insets.bottom, 16),
+          paddingBottom: Math.max(insets.bottom, 16),
           paddingTop: 5,
         },
         tabBarIcon: ({ focused, color, size }) => {

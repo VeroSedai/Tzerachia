@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import TimerWidget from '../components/TimerWidget';
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function TodayScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { state, toggleTask, postponeTaskToFriday } = useAppContext();
   
   const formatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -22,7 +23,7 @@ export default function TodayScreen({ navigation }: Props) {
   const completedDailyTasksCount = state.dailyTasks.filter(t => t.completed).length;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <ScrollView contentContainerStyle={styles.container}>
         
         {/* Custom Header */}
@@ -140,7 +141,7 @@ export default function TodayScreen({ navigation }: Props) {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

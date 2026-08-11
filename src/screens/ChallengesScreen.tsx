@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppContext } from '../context/AppContext';
 import { RootStackParamList } from '../types';
@@ -11,6 +11,7 @@ type Props = {
 };
 
 export default function ChallengesScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { state, startChallenge } = useAppContext();
   const activeChallenge = state.activeChallenge;
 
@@ -39,7 +40,7 @@ export default function ChallengesScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.headerTitle}>Le Tue Sfide</Text>
         
@@ -97,7 +98,7 @@ export default function ChallengesScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

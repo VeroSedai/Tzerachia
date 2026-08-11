@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Platform, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
@@ -14,6 +14,7 @@ import { exportAppStatePayload, shareToTelegram } from '../utils/syncUtils';
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks } = useAppContext();
   
   const [timeInput, setTimeInput] = useState(state.reminderTime || '09:00');
@@ -148,7 +149,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const syncUrl = `simplyclean://sync?data=${syncPayload}`;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#1A2F2F" />
@@ -258,7 +259,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
       {/* Sync Modal */}
       <Modal visible={syncModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setSyncModalVisible(false); setIsScanning(false); }}>
-        <SafeAreaView style={styles.modalSafeArea}>
+        <View style={[styles.modalSafeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{t('sync_title', state.language)}</Text>
             <TouchableOpacity onPress={() => { setSyncModalVisible(false); setIsScanning(false); }}>
@@ -326,9 +327,9 @@ export default function SettingsScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
           )}
-        </SafeAreaView>
+        </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

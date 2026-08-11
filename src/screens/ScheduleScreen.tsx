@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
@@ -93,6 +93,7 @@ const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMisse
 });
 
 export default function ScheduleScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { state, toggleTask, postponeTaskToFriday, toggleMonthlyTask, resetMonthlyTasks } = useAppContext();
   
   const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; 
@@ -266,7 +267,7 @@ export default function ScheduleScreen({ navigation }: Props) {
   ), [state.language, viewMode, navigation, selectedDay, resetMonthlyTasks]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <FlatList
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -277,7 +278,7 @@ export default function ScheduleScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

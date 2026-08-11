@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -37,6 +37,7 @@ const GuideItem = React.memo(({ item, type, navigation }: any) => (
 ));
 
 export default function GuidesScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { state } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -133,7 +134,7 @@ export default function GuidesScreen({ navigation }: Props) {
   ), [state.language, navigation, searchQuery, CATEGORIES, activeCategory]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <SectionList<any, any>
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -146,7 +147,7 @@ export default function GuidesScreen({ navigation }: Props) {
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         SectionSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
