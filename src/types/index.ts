@@ -1,4 +1,4 @@
-export type TaskType = 'daily' | 'weekly' | 'catch-all';
+export type TaskType = 'daily' | 'weekly' | 'catch-all' | 'monthly';
 
 export interface Task {
   id: string;
@@ -60,6 +60,7 @@ export interface AppState {
   lastResetDate: string; // YYYY-MM-DD
   dailyTasks: Task[];
   weeklyTasks: Task[];
+  monthlyTasks: Task[];
   activeChallenge: Challenge | null;
   timerDuration: number;
   timerActive: boolean;
@@ -68,6 +69,7 @@ export interface AppState {
   customCategories: string[];
   notificationsEnabled: boolean;
   reminderTime: string; // HH:mm format
+  language: 'it' | 'en';
 }
 
 export type RootStackParamList = {

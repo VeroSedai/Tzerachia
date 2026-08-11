@@ -11,6 +11,8 @@ import GuidesScreen from '../screens/GuidesScreen';
 import GuideDetailScreen from '../screens/GuideDetailScreen';
 import AddGuideScreen from '../screens/AddGuideScreen';
 import { RootStackParamList } from '../types';
+import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -41,6 +43,8 @@ function ChallengesStack() {
 }
 
 function TabNavigator() {
+  const { state } = useAppContext();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -72,21 +76,25 @@ function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Oggi" component={TodayScreen} />
+      <Tab.Screen 
+        name="Oggi" 
+        component={TodayScreen} 
+        options={{ title: t('tab_today', state.language) }}
+      />
       <Tab.Screen 
         name="Schedule" 
         component={ScheduleScreen} 
-        options={{ title: 'Pianifica' }}
+        options={{ title: t('tab_schedule', state.language) }}
       />
       <Tab.Screen 
         name="ChallengesStack" 
         component={ChallengesStack} 
-        options={{ title: 'Challenges' }}
+        options={{ title: t('tab_challenges', state.language) }}
       />
       <Tab.Screen 
         name="GuidesStack" 
         component={GuidesStack} 
-        options={{ title: 'Guide' }} 
+        options={{ title: t('tab_guides', state.language) }} 
       />
     </Tab.Navigator>
   );

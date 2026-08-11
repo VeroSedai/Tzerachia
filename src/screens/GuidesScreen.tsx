@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, SafeAr
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 import { guides as defaultGuides, recipes as defaultRecipes } from '../data/guidesAndRecipes';
 
 const DEFAULT_CATEGORIES = [
@@ -57,13 +58,13 @@ export default function GuidesScreen({ navigation }: Props) {
         </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <Text style={[styles.screenTitle, { marginBottom: 0 }]}>Guide & Risorse</Text>
+          <Text style={[styles.screenTitle, { marginBottom: 0 }]}>{t('tab_guides', state.language)}</Text>
           <TouchableOpacity 
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
             onPress={() => navigation.navigate('AddGuide')}
           >
             <Ionicons name="add" size={16} color="#FFFFFF" />
-            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>Aggiungi</Text>
+            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>{t('add_guide', state.language)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -72,7 +73,7 @@ export default function GuidesScreen({ navigation }: Props) {
           <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Cerca guide e ricette..."
+            placeholder={t('search_guides', state.language)}
             placeholderTextColor="#8A9A9A"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -81,7 +82,7 @@ export default function GuidesScreen({ navigation }: Props) {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
           {/* Categories */}
-          <Text style={styles.sectionTitle}>CATEGORIE RAPIDE</Text>
+          <Text style={styles.sectionTitle}>{t('quick_categories', state.language)}</Text>
           <View style={styles.categoriesWrapper}>
             {CATEGORIES.map(cat => (
               <TouchableOpacity
@@ -100,7 +101,7 @@ export default function GuidesScreen({ navigation }: Props) {
           {/* List */}
           {filteredGuides.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>GUIDE POPOLARI</Text>
+              <Text style={styles.sectionTitle}>{t('cleaning_guides', state.language).toUpperCase()}</Text>
               <View style={styles.listContainer}>
                 {filteredGuides.map(guide => (
                   <TouchableOpacity 
@@ -121,7 +122,7 @@ export default function GuidesScreen({ navigation }: Props) {
 
           {filteredRecipes.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>RICETTE DETERGENTI FAI-DA-TE</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('recipes', state.language).toUpperCase()}</Text>
               <View style={styles.listContainer}>
                 {filteredRecipes.map(recipe => (
                   <TouchableOpacity 

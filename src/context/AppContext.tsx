@@ -15,6 +15,7 @@ interface AppContextProps {
   setTimer: (duration: number) => void;
   toggleTimerActive: () => void;
   toggleChallengeSubtask: (subtaskId: string) => void;
+  toggleMonthlyTask: (taskId: string) => void;
   addCustomGuide: (guide: Guide) => void;
   addCustomRecipe: (recipe: Recipe) => void;
   deleteCustomGuide: (id: string) => void;
@@ -23,15 +24,18 @@ interface AppContextProps {
   deleteCustomCategory: (category: string) => void;
   updateWeeklySchedule: (updates: { id: string, title: string }[]) => void;
   resetWeeklySchedule: () => void;
+  resetMonthlyTasks: () => void;
   resetDailyTasks: () => void;
   resetActiveChallenge: () => void;
   factoryReset: () => void;
   toggleNotifications: (enabled: boolean) => void;
   updateReminderTime: (time: string) => void;
+  setLanguage: (lang: 'it' | 'en') => void;
 }
 
 const DAILY_KEY = '@simplyclean_daily';
 const WEEKLY_KEY = '@simplyclean_weekly';
+const MONTHLY_KEY = '@simplyclean_monthly';
 const CHALLENGES_KEY = '@simplyclean_challenges';
 const LAST_DATE_KEY = '@simplyclean_last_date';
 const CUSTOM_GUIDES_KEY = '@simplyclean_custom_guides';
@@ -39,6 +43,7 @@ const CUSTOM_RECIPES_KEY = '@simplyclean_custom_recipes';
 const CUSTOM_CATEGORIES_KEY = '@simplyclean_custom_categories';
 const NOTIFICATIONS_ENABLED_KEY = '@simplyclean_notifications_enabled';
 const REMINDER_TIME_KEY = '@simplyclean_reminder_time';
+const LANGUAGE_KEY = '@simplyclean_language';
 
 const defaultState: AppState = {
   lastResetDate: new Date().toISOString().split('T')[0],
@@ -57,6 +62,13 @@ const defaultState: AppState = {
     { id: 'weekly-5', title: 'Catch-all Day', completed: false, type: 'catch-all', dayOfWeek: 'Venerdì' },
     { id: 'weekly-6', title: 'Lenzuola e Asciugamani', completed: false, type: 'weekly', dayOfWeek: 'Sabato' }
   ],
+  monthlyTasks: [
+    { id: 'm1', title: 'Filtri Aria e Bocchette', completed: false, type: 'monthly' },
+    { id: 'm2', title: 'Lampadari e Ventilatori', completed: false, type: 'monthly' },
+    { id: 'm3', title: 'Muri e Interruttori', completed: false, type: 'monthly' },
+    { id: 'm4', title: 'Igienizzazione Materassi', completed: false, type: 'monthly' },
+    { id: 'm5', title: 'Decalcificazione Macchina Caffè', completed: false, type: 'monthly' }
+  ],
   activeChallenge: null,
   timerDuration: 15 * 60,
   timerActive: false,
@@ -65,6 +77,7 @@ const defaultState: AppState = {
   customCategories: [],
   notificationsEnabled: false,
   reminderTime: '09:00',
+  language: 'it',
 };
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -76,16 +89,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [dailyStr, weeklyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr] = await Promise.all([
+        const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr] = await Promise.all([
           AsyncStorage.getItem(DAILY_KEY),
           AsyncStorage.getItem(WEEKLY_KEY),
+          AsyncStorage.getItem(MONTHLY_KEY),
           AsyncStorage.getItem(CHALLENGES_KEY),
           AsyncStorage.getItem(LAST_DATE_KEY),
           AsyncStorage.getItem(CUSTOM_GUIDES_KEY),
           AsyncStorage.getItem(CUSTOM_RECIPES_KEY),
           AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY),
           AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
-          AsyncStorage.getItem(REMINDER_TIME_KEY)
+          AsyncStorage.getItem(REMINDER_TIME_KEY),
+          AsyncStorage.getItem(LANGUAGE_KEY)
         ]);
 
         const safeParse = (str: string | null, fallback: any) => {
@@ -101,12 +116,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const today = new Date().toISOString().split('T')[0];
         let dailyTasks = safeParse(dailyStr, defaultState.dailyTasks);
         const weeklyTasks = safeParse(weeklyStr, defaultState.weeklyTasks);
+        const monthlyTasks = safeParse(monthlyStr, defaultState.monthlyTasks);
         const activeChallenge = safeParse(challengesStr, defaultState.activeChallenge);
         const customGuides = safeParse(customGuidesStr, defaultState.customGuides);
         const customRecipes = safeParse(customRecipesStr, defaultState.customRecipes);
         const customCategories = safeParse(customCategoriesStr, defaultState.customCategories);
         const notificationsEnabled = safeParse(notifEnabledStr, defaultState.notificationsEnabled);
         const reminderTime = safeParse(reminderTimeStr, defaultState.reminderTime);
+        const language = languageStr === 'en' || languageStr === 'it' ? languageStr : defaultState.language;
         
         // Auto Reset Logic
         if (lastDateStr !== today) {
@@ -123,6 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           lastResetDate: today,
           dailyTasks,
           weeklyTasks,
+          monthlyTasks,
           activeChallenge,
           timerDuration: 15 * 60,
           timerActive: false,
@@ -131,6 +149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           customCategories,
           notificationsEnabled,
           reminderTime,
+          language,
         });
       } catch (error) {
         console.error('AsyncStorage Load Error:', error);
@@ -224,6 +243,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedWeekly = state.weeklyTasks.map(t => t.id === taskId ? { ...t, postponed: true } : t);
     await safeSetItem(WEEKLY_KEY, updatedWeekly);
     setState(prev => ({ ...prev, weeklyTasks: updatedWeekly }));
+  };
+
+  const toggleMonthlyTask = async (id: string) => {
+    const updatedMonthly = state.monthlyTasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    );
+    await safeSetItem(MONTHLY_KEY, updatedMonthly);
+    setState(prev => ({ ...prev, monthlyTasks: updatedMonthly }));
   };
 
   const startChallenge = async (challengeId: '7-day' | '28-day') => {
@@ -323,8 +350,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetWeeklySchedule = async () => {
-    await safeSetItem(WEEKLY_KEY, defaultState.weeklyTasks);
-    setState(prev => ({ ...prev, weeklyTasks: defaultState.weeklyTasks }));
+    const resetWeekly = state.weeklyTasks.map(t => ({ ...t, completed: false, postponed: false }));
+    await safeSetItem(WEEKLY_KEY, resetWeekly);
+    setState(prev => ({ ...prev, weeklyTasks: resetWeekly }));
+  };
+
+  const resetMonthlyTasks = async () => {
+    const resetMonthly = state.monthlyTasks.map(t => ({ ...t, completed: false }));
+    await safeSetItem(MONTHLY_KEY, resetMonthly);
+    setState(prev => ({ ...prev, monthlyTasks: resetMonthly }));
   };
 
   const resetDailyTasks = async () => {
@@ -355,6 +389,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(prev => ({ ...prev, reminderTime: time }));
   };
 
+  const setLanguage = async (lang: 'it' | 'en') => {
+    await safeSetItem(LANGUAGE_KEY, lang);
+    setState(prev => ({ ...prev, language: lang }));
+  };
+
   const factoryReset = async () => {
     await safeClear();
     // Use JSON parse/stringify to create a deep clone of defaultState
@@ -374,6 +413,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTimer, 
       toggleTimerActive,
       toggleChallengeSubtask,
+      toggleMonthlyTask,
       addCustomGuide,
       addCustomRecipe,
       deleteCustomGuide,
@@ -382,13 +422,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteCustomCategory,
       updateWeeklySchedule,
       resetWeeklySchedule,
+      resetMonthlyTasks,
       resetDailyTasks,
       resetActiveChallenge,
       factoryReset,
       toggleNotifications,
-      updateReminderTime
+      updateReminderTime,
+      setLanguage,
     }}>
-      {children}
+      {isLoaded ? children : null}
     </AppContext.Provider>
   );
 };

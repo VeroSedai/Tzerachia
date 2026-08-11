@@ -3,159 +3,297 @@ import { Recipe, Guide } from '../types';
 export const recipes: Recipe[] = [
   {
     id: 'spray-multiuso',
-    title: 'Spray Multiuso (All-Purpose Cleaner)',
+    title: 'Spray Multiuso Aceto & Limone',
     category: 'Detergenti Fai-da-te',
     ingredients: [
-      '1¼ tazza d\'acqua',
+      '1¼ tazza d\'acqua (distillata o filtrata)',
       '½ tazza di aceto bianco',
-      '10 gocce di olio essenziale (limone/eucalipto)',
-      'Uso: superfici generali, banconi, piastrelle'
+      '10-15 gocce di olio essenziale di limone',
+      'Uso: Spruzzare su superfici rigide, banconi, e piastrelle. Asciugare con panno in microfibra.'
     ]
   },
   {
-    id: 'detergente-marmo-granito',
-    title: 'Detergente Marmo & Granito',
-    category: 'Detergenti Fai-da-te',
-    ingredients: [
-      '1½ tazza d\'acqua',
-      '3 cucchiai di alcool etilico',
-      '1 cucchiaino di sapone di Castiglia (o detersivo piatti)',
-      'Uso: pietra naturale'
-    ]
-  },
-  {
-    id: 'sink-scrub',
-    title: 'Sink Scrub per Lavandini',
+    id: 'sink-scrub-abrasivo',
+    title: 'Scrub Abrasivo Bicarbonato',
     category: 'Detergenti Fai-da-te',
     ingredients: [
       '2 tazze di bicarbonato di sodio',
-      '20 gocce di olio essenziale di limone o garofano',
-      'Sapone per piatti (al momento)',
-      'Uso: pulizia profonda e lucidatura lavelli'
+      '20 gocce di olio essenziale al limone o tea tree',
+      'Sapone di Castiglia (da aggiungere al momento)',
+      'Uso: Cospargere nel lavandino, aggiungere qualche goccia di sapone, strofinare e risciacquare.'
     ]
   },
   {
-    id: 'detergente-vetri',
-    title: 'Detergente Vetri e Specchi',
+    id: 'detergente-vetri-menta',
+    title: 'Detergente Vetri all\'Alcol e Menta',
     category: 'Detergenti Fai-da-te',
     ingredients: [
       '1½ tazza d\'acqua',
       '1½ cucchiaio di aceto bianco',
-      '1½ cucchiaio di alcool etilico',
-      '3 gocce di olio essenziale',
-      'Uso: vetri senza aloni'
-    ]
-  },
-  {
-    id: 'spray-antimuffa',
-    title: 'Spray Disinfettante Antimuffa',
-    category: 'Detergenti Fai-da-te',
-    ingredients: [
-      '1 tazza d\'acqua',
-      '½ tazza di acqua ossigenata (hydrogen peroxide 3%)',
-      '20 gocce di Tea Tree oil',
-      'Uso: fughe piastrelle, box doccia'
-    ]
-  },
-  {
-    id: 'detergente-sanitari',
-    title: 'Detergente Profondo per Sanitari & Bagno',
-    category: 'Detergenti Fai-da-te',
-    ingredients: [
-      '1 tazza di bicarbonato',
-      '½ tazza di sapone di Castiglia liquido',
-      '½ tazza d\'acqua',
-      '2 cucchiai di aceto bianco',
-      'Uso: vasca, doccia, sanitari'
+      '1½ cucchiaio di alcool etilico (rubbing alcohol)',
+      '3 gocce di olio essenziale alla menta piperita',
+      'Uso: Spruzzare su vetri e specchi per una pulizia senza aloni.'
     ]
   },
   {
     id: 'lucidante-acciaio',
-    title: 'Lucidante Acciaio Inox',
+    title: 'Detergente & Lucidante Acciaio',
     category: 'Detergenti Fai-da-te',
     ingredients: [
-      '2 cucchiai di olio d\'oliva o olio di cocco liquido',
-      'Qualche goccia di succo di limone su panno in microfibra',
-      'Uso: elettrodomestici in acciaio'
+      'Acqua in un flacone spray',
+      'Qualche goccia di detersivo per piatti (per pulire)',
+      'Olio d\'oliva o olio minerale (per lucidare)',
+      'Uso: Pulire prima con acqua saponata. Asciugare. Applicare una goccia d\'olio su un panno e lucidare seguendo le venature dell\'acciaio.'
+    ]
+  },
+  {
+    id: 'polvere-materasso',
+    title: 'Polvere Rinfrescante Bicarbonato & Lavanda',
+    category: 'Detergenti Fai-da-te',
+    ingredients: [
+      '1 tazza di bicarbonato di sodio',
+      '10-15 gocce di olio essenziale di lavanda',
+      'Uso: Cospargere su tappeti o materassi. Lasciare agire per 15-30 minuti, quindi aspirare accuratamente.'
+    ]
+  },
+  {
+    id: 'detergente-parquet',
+    title: 'Detergente Parquet & Laminato',
+    category: 'Detergenti Fai-da-te',
+    ingredients: [
+      '1 tazza d\'acqua calda',
+      '½ tazza di aceto bianco',
+      '1-2 gocce di detersivo per piatti delicato',
+      '5 gocce di olio essenziale (opzionale)',
+      'Uso: Inumidire leggermente il panno in microfibra. Non bagnare eccessivamente il legno.'
+    ]
+  },
+  {
+    id: 'pasta-fughe',
+    title: 'Pasta Pulizia Fughe Bicarbonato & Perossido',
+    category: 'Detergenti Fai-da-te',
+    ingredients: [
+      '½ tazza di bicarbonato di sodio',
+      '¼ tazza di perossido di idrogeno (acqua ossigenata al 3%)',
+      '1 cucchiaino di sapone per piatti',
+      'Uso: Applicare sulle fughe, lasciare agire 5-10 minuti, strofinare con uno spazzolino e risciacquare.'
+    ]
+  },
+  {
+    id: 'sbiancante-bucato',
+    title: 'Sbiancante Bucato Fai-da-Te',
+    category: 'Detergenti Fai-da-te',
+    ingredients: [
+      '½ tazza di perossido di idrogeno (acqua ossigenata)',
+      '½ tazza di bicarbonato di sodio (aggiunto al lavaggio)',
+      'Uso: Aggiungere direttamente nel cestello o nella vaschetta per rinfrescare i bianchi senza candeggina.'
+    ]
+  },
+  {
+    id: 'nutriente-pelle',
+    title: 'Nutriente Pelle e Divani',
+    category: 'Detergenti Fai-da-te',
+    ingredients: [
+      '¼ tazza di olio d\'oliva o olio di lino',
+      '½ tazza di aceto bianco',
+      'Uso: Agitare bene. Spruzzare su un panno morbido, strofinare sulla pelle e rimuovere l\'eccesso con un panno asciutto.'
     ]
   }
 ];
 
 export const guides: Guide[] = [
   {
-    id: 'speed-cleaning',
-    title: 'Speed Cleaning - Qualsiasi Stanza',
-    category: 'Speed Cleaning',
-    duration: '10-15 min',
-    steps: [
-      { step: 1, description: 'Imposta il timer a 10-15 minuti.' },
-      { step: 2, description: 'Raccogli e getta la spazzatura visibile.' },
-      { step: 3, description: 'Raccogli in un cestino gli oggetti fuori posto da riposizionare dopo.' },
-      { step: 4, description: 'Spruzza e pulisci le superfici rigide dall\'alto verso il basso.' },
-      { step: 5, description: 'Spolvera rapidamente i mobili.' },
-      { step: 6, description: 'Passa aspirapolvere o scopa nelle zone di passaggio.' },
-      { step: 7, description: 'Sistemare cuscini, coperte e asciugamani puliti.' }
-    ]
-  },
-  {
-    id: 'speed-organizing',
-    title: 'Speed Organizing - Riordino Rapido',
-    category: 'Speed Cleaning',
-    steps: [
-      { step: 1, description: 'Svuota completamente lo spazio (cassetto, cassettoniera o ripiano).' },
-      { step: 2, description: 'Pulisci la superficie vuota con un panno umido.' },
-      { step: 3, description: 'Separa gli oggetti in 4 contenitori: Cestina (Toss), Dona/Vendi (Donate), Sposta (Relocate), Tieni (Keep).' },
-      { step: 4, description: 'Raggruppa gli oggetti "Tieni" per categoria omogenea.' },
-      { step: 5, description: 'Riponi gli oggetti in modo ordinato usando divisori o contenitori.' }
-    ]
-  },
-  {
-    id: 'cucina-profonda',
-    title: 'Pulizia Approfondita della Cucina & Elettrodomestici',
+    id: 'lavastoviglie-deep',
+    title: 'Pulizia Profonda Lavastoviglie',
     category: 'Cucina',
+    duration: '20 min',
     steps: [
-      { step: 1, description: 'Sgombera e disinfetta i banconi da lavoro.' },
-      { step: 2, description: 'Pulisci il forno microonde scaldando una ciotola con acqua e limone per 3 minuti e strofinando.' },
-      { step: 3, description: 'Pulisci il frigorifero rimuovendo i cibi scaduti e passando i ripiani con spray multiuso.' },
-      { step: 4, description: 'Disinfetta il lavello applicando il Sink Scrub e strofinando con spugna morbida.' },
-      { step: 5, description: 'Pulisci gli elettrodomestici in acciaio con panno in microfibra.' },
-      { step: 6, description: 'Passa l\'aspirapolvere e lava il pavimento.' }
+      { step: 1, description: 'Rimuovi il cestello inferiore per accedere al filtro.' },
+      { step: 2, description: 'Estrai il filtro e lavalo nel lavandino con acqua calda e sapone per piatti usando uno spazzolino.' },
+      { step: 3, description: 'Rimetti il filtro in posizione.' },
+      { step: 4, description: 'Versa 1 tazza di aceto bianco in una ciotola posizionata sul cestello superiore.' },
+      { step: 5, description: 'Avvia un ciclo di lavaggio ad alta temperatura a vuoto.' },
+      { step: 6, description: 'Asciuga i bordi esterni e le guarnizioni con un panno umido.' }
     ]
   },
   {
-    id: 'bagno-completa',
-    title: 'Pulizia Completa del Bagno',
-    category: 'Bagno',
+    id: 'lavatrice-sanitize',
+    title: 'Igienizzazione Lavatrice',
+    category: 'Lavanderia',
+    duration: '15 min + Ciclo',
     steps: [
-      { step: 1, description: 'Spruzza il disinfettante su esterno del WC, lavandino e doccia/vasca.' },
-      { step: 2, description: 'Versa il detergente specifico all\'interno della tazza del WC.' },
-      { step: 3, description: 'Lascia agire per 10 minuti.' },
-      { step: 4, description: 'Strofina l\'interno del WC con lo scopino e tira lo sciacquone.' },
-      { step: 5, description: 'Pulisci vetri, specchi e rubinetteria con il detergente vetri.' },
-      { step: 6, description: 'Pulisci le superfici esterne dei sanitari dall\'alto verso il basso.' },
-      { step: 7, description: 'Svuota il cestino e lava il pavimento.' }
+      { step: 1, description: 'Pulisci la guarnizione in gomma dell\'oblò con panno in microfibra e spray multiuso, rimuovendo sporco e capelli.' },
+      { step: 2, description: 'Estrai il cassetto dei detersivi, lavalo nel lavandino e asciugalo.' },
+      { step: 3, description: 'Pulisci l\'alloggiamento del cassetto con uno spazzolino.' },
+      { step: 4, description: 'Versa 2 tazze di aceto bianco direttamente nel cestello vuoto.' },
+      { step: 5, description: 'Avvia il ciclo di lavaggio più caldo e lungo (es. Cotone 90° o ciclo Pulizia Cestello).' },
+      { step: 6, description: 'Lascia lo sportello aperto per far asciugare completamente l\'interno.' }
     ]
   },
   {
-    id: 'igienizzazione-tessili',
-    title: 'Igienizzazione Tessili, Cuscini & Materasso',
+    id: 'forno-revival',
+    title: 'Pulizia Forno e Piano Cottura',
+    category: 'Cucina',
+    duration: '40 min',
+    steps: [
+      { step: 1, description: 'Rimuovi le griglie dal forno e mettile a bagno in acqua calda e detersivo piatti.' },
+      { step: 2, description: 'Prepara una pasta densa con bicarbonato di sodio e poca acqua.' },
+      { step: 3, description: 'Spalma la pasta all\'interno del forno (evitando le serpentine) e sul vetro. Lascia agire 20-30 minuti.' },
+      { step: 4, description: 'Spruzza dell\'aceto bianco sulla pasta di bicarbonato per farla frizzare e sciogliere il grasso.' },
+      { step: 5, description: 'Rimuovi la pasta con una spugna umida, risciacquando frequentemente.' },
+      { step: 6, description: 'Pulisci il piano cottura con spray multiuso o pasta di bicarbonato per le macchie ostinate.' },
+      { step: 7, description: 'Asciuga e reinserisci le griglie pulite.' }
+    ]
+  },
+  {
+    id: 'microonde-vapore',
+    title: 'Metodo Vapore Limone per Microonde',
+    category: 'Cucina',
+    duration: '10 min',
+    steps: [
+      { step: 1, description: 'Riempi una ciotola di vetro adatta al microonde con 1 tazza d\'acqua e fette di mezzo limone (o 2 cucchiai di aceto).' },
+      { step: 2, description: 'Avvia il microonde alla massima potenza per 3-5 minuti, fino a far bollire l\'acqua.' },
+      { step: 3, description: 'Lascia lo sportello chiuso per altri 5 minuti per permettere al vapore di ammorbidire lo sporco.' },
+      { step: 4, description: 'Apri lo sportello con attenzione e rimuovi la ciotola usando un guanto da forno.' },
+      { step: 5, description: 'Estrai il piatto rotante e lavalo nel lavandino.' },
+      { step: 6, description: 'Passa l\'interno del microonde con un panno in microfibra asciutto o leggermente umido. Lo sporco verrà via facilmente.' }
+    ]
+  },
+  {
+    id: 'materasso-sanitize',
+    title: 'Igienizzazione e Rotazione Materasso',
     category: 'Tessili & Divani',
+    duration: '30 min',
     steps: [
-      { step: 1, description: 'Rimuovi la biancheria e avvia un carico di lavatrice.' },
-      { step: 2, description: 'Passa l\'aspirapolvere con bocchetta per imbottiti sul materasso o divano.' },
-      { step: 3, description: 'Cospergi il bicarbonato sul materasso/divano e lascia agire 30 minuti per assorbire gli odori.' },
-      { step: 4, description: 'Aspira accuratamente il bicarbonato residuo.' },
-      { step: 5, description: 'Ruota il materasso di 180 gradi per garantirne un’usura uniforme.' }
+      { step: 1, description: 'Rimuovi tutte le lenzuola, coperte e coprimaterasso per lavarli.' },
+      { step: 2, description: 'Passa l\'aspirapolvere su tutta la superficie del materasso usando la bocchetta per imbottiti.' },
+      { step: 3, description: 'Cospargi uniformemente la Polvere Rinfrescante Bicarbonato & Lavanda sul materasso.' },
+      { step: 4, description: 'Lascia agire la polvere per 15-30 minuti per assorbire odori e umidità.' },
+      { step: 5, description: 'Aspira accuratamente tutta la polvere dal materasso.' },
+      { step: 6, description: 'Ruota il materasso di 180 gradi (testa-piedi) per un\'usura uniforme.' }
     ]
   },
   {
-    id: 'finestre-battiscopa',
-    title: 'Pulizia Finestre e Battiscopa',
+    id: 'battiscopa-quick',
+    title: 'Pulizia Rapida Battiscopa e Porte',
     category: 'Altro',
+    duration: '15 min',
     steps: [
-      { step: 1, description: 'Spolvera i telai delle finestre e i battiscopa con un panno catturapolvere.' },
-      { step: 2, description: 'Spruzza il detergente vetri sui vetri e pulisci con panno in microfibra con movimenti a \'S\'.' },
-      { step: 3, description: 'Ripassa i battiscopa con un panno umido caldo per rimuovere macchie accumulate.' }
+      { step: 1, description: 'Passa l\'aspirapolvere con la spazzola lungo tutti i battiscopa per rimuovere la polvere superficiale.' },
+      { step: 2, description: 'Prepara un secchio con acqua calda e 2 gocce di detersivo per piatti.' },
+      { step: 3, description: 'Inumidisci un panno in microfibra nella soluzione e strizzalo bene.' },
+      { step: 4, description: 'Passa il panno sui battiscopa per rimuovere segni neri e sporco ostinato.' },
+      { step: 5, description: 'Con lo stesso panno, pulisci maniglie delle porte, cornici e interruttori della luce.' }
+    ]
+  },
+  {
+    id: 'frigorifero-deep',
+    title: 'Organizzazione e Pulizia Frigorifero',
+    category: 'Cucina',
+    duration: '30 min',
+    steps: [
+      { step: 1, description: 'Svuota completamente un ripiano alla volta o l\'intero frigorifero se hai spazio sui banconi.' },
+      { step: 2, description: 'Elimina i cibi scaduti o avariati.' },
+      { step: 3, description: 'Rimuovi i cassetti estraibili e lavali nel lavandino con acqua tiepida e sapone.' },
+      { step: 4, description: 'Spruzza lo Spray Multiuso (o acqua e aceto) sui ripiani interni e asciuga con microfibra.' },
+      { step: 5, description: 'Pulisci le guarnizioni delle porte con uno spazzolino.' },
+      { step: 6, description: 'Rimetti il cibo in modo logico (es. carne in basso, latticini al centro) e reinserisci i cassetti puliti.' }
+    ]
+  },
+  {
+    id: 'macchina-caffe',
+    title: 'Decalcificazione Macchina del Caffè',
+    category: 'Cucina',
+    duration: '20 min',
+    steps: [
+      { step: 1, description: 'Rimuovi il filtro del caffè usato e svuota la caraffa.' },
+      { step: 2, description: 'Riempi il serbatoio con metà acqua fredda e metà aceto bianco.' },
+      { step: 3, description: 'Avvia il ciclo di infusione e fermalo a metà. Lascia riposare per 30 minuti per sciogliere il calcare.' },
+      { step: 4, description: 'Riaccendi la macchina e fai terminare il ciclo.' },
+      { step: 5, description: 'Svuota la caraffa e sciacquala.' },
+      { step: 6, description: 'Esegui 2 o 3 cicli completi di infusione utilizzando solo acqua fresca e pulita per rimuovere ogni traccia di aceto.' }
+    ]
+  },
+  {
+    id: 'filtri-aria',
+    title: 'Filtri Aria e Bocchette (Mensile)',
+    category: 'Altro',
+    duration: '15 min',
+    steps: [
+      { step: 1, description: 'Spegni l\'impianto di condizionamento o riscaldamento.' },
+      { step: 2, description: 'Usa l\'aspirapolvere con accessorio a spazzola per rimuovere la polvere dalle grate e bocchette di ventilazione.' },
+      { step: 3, description: 'Apri il pannello principale per accedere ai filtri dell\'aria.' },
+      { step: 4, description: 'Sostituisci il filtro usa e getta con uno nuovo (o lava quello riutilizzabile e fallo asciugare completamente).' },
+      { step: 5, description: 'Rimetti il coperchio, accendi l\'impianto e segna la data per il prossimo mese.' }
+    ]
+  },
+  {
+    id: 'lampadari-ventilatori',
+    title: 'Lampadari e Ventilatori a Soffitto',
+    category: 'Altro',
+    duration: '15 min',
+    steps: [
+      { step: 1, description: 'Assicurati che l\'interruttore della luce e del ventilatore sia spento e fermo.' },
+      { step: 2, description: 'Prepara una scala stabile sotto il lampadario o ventilatore.' },
+      { step: 3, description: 'Usa un piumino allungabile in microfibra o la tecnica della "federa" (infila una vecchia federa sulla pala del ventilatore e tira per catturare la polvere senza farla cadere a terra).' },
+      { step: 4, description: 'Spruzza un panno in microfibra con detergente multiuso e pulisci la struttura del lampadario e le lampadine (a freddo).' },
+      { step: 5, description: 'Passa l\'aspirapolvere a terra per raccogliere l\'eventuale polvere caduta.' }
+    ]
+  },
+  {
+    id: 'muri-interruttori',
+    title: 'Muri e Interruttori',
+    category: 'Altro',
+    duration: '10 min',
+    steps: [
+      { step: 1, description: 'Prepara un panno in microfibra pulito e leggermente umido con acqua.' },
+      { step: 2, description: 'Per i muri: passa delicatamente il panno sulle macchie visibili (ditate, segni neri). Usa una gomma magica per i segni ostinati.' },
+      { step: 3, description: 'Per gli interruttori: spruzza il disinfettante o detergente sul panno (MAI direttamente sull\'interruttore per evitare cortocircuiti).' },
+      { step: 4, description: 'Strofina accuratamente tutte le placchette degli interruttori di casa.' }
+    ]
+  },
+  {
+    id: 'routine-15-express',
+    title: 'Routine 15 Minuti Express',
+    category: 'Speed Cleaning',
+    duration: '15 min',
+    steps: [
+      { step: 1, description: 'Quick sweep: spazza rapidamente i pavimenti delle stanze principali.' },
+      { step: 2, description: 'Surface wipe: passa un panno in microfibra con spray multiuso sulle superfici a vista.' },
+      { step: 3, description: 'Clutter clear: raccogli rapidamente in un cestino gli oggetti fuori posto per liberare spazio.' }
+    ]
+  },
+  {
+    id: 'ospiti-inattesi',
+    title: 'Pulizia Ospiti Inattesi (10 Min)',
+    category: 'Speed Cleaning',
+    duration: '10 min',
+    steps: [
+      { step: 1, description: 'Quick bathroom wipe: pulisci velocemente lavandino, specchio e WC con salviette o spray.' },
+      { step: 2, description: 'Entryway tidy: riordina giacche e scarpe all\'ingresso per un aspetto accogliente.' },
+      { step: 3, description: 'Trash removal: butta l\'immondizia visibile e cambia i sacchetti pieni.' }
+    ]
+  },
+  {
+    id: 'igienizzazione-quotidiana-bagno',
+    title: 'Igienizzazione Quotidiana Bagno',
+    category: 'Bagno',
+    duration: '5 min',
+    steps: [
+      { step: 1, description: 'Toilet bowl: pulisci rapidamente l\'interno del WC con lo scopino.' },
+      { step: 2, description: 'Sink touch-up: passa una spugna o salvietta sul lavandino e rimuovi tracce di dentifricio.' },
+      { step: 3, description: 'Mirror: pulisci eventuali schizzi dallo specchio con il detergente vetri.' }
+    ]
+  },
+  {
+    id: 'pulizia-profonda-doccia',
+    title: 'Pulizia Profonda Doccia & Piastrelle',
+    category: 'Bagno',
+    duration: '20 min',
+    steps: [
+      { step: 1, description: 'Soap scum removal: applica la pasta di bicarbonato o sgrassatore e strofina i residui di sapone dai vetri e pareti.' },
+      { step: 2, description: 'Glass squeegee: risciacqua e usa un tergivetri per asciugare perfettamente le pareti del box doccia senza lasciare aloni.' },
+      { step: 3, description: 'Grout scrubbing: strofina energicamente le fughe con uno spazzolino e acqua ossigenata per sbiancarle.' }
     ]
   }
 ];

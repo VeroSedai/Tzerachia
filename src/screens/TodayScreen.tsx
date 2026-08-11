@@ -5,6 +5,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import TimerWidget from '../components/TimerWidget';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 
 interface Props {
   navigation: NativeStackNavigationProp<any, any>;
@@ -42,7 +43,7 @@ export default function TodayScreen({ navigation }: Props) {
 
         {/* Daily Tasks */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Daily Tasks</Text>
+          <Text style={styles.sectionTitle}>{t('daily_tasks', state.language)}</Text>
           <Text style={styles.sectionSubtitle}>{5 - completedDailyTasksCount} da completare</Text>
         </View>
 
@@ -65,7 +66,7 @@ export default function TodayScreen({ navigation }: Props) {
         </View>
 
         {/* Focus del Giorno */}
-        <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>Focus del giorno</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>{t('weekly_focus', state.language)}</Text>
         
         <View style={styles.focusCard}>
           <View style={styles.focusHeader}>
@@ -89,12 +90,12 @@ export default function TodayScreen({ navigation }: Props) {
               </Text>
               {focusTask.completed && (
                 <View style={{ backgroundColor: '#E0F0F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginLeft: 12 }}>
-                  <Text style={{ color: '#00A3A1', fontSize: 10, fontWeight: 'bold' }}>Completato</Text>
+                  <Text style={{ color: '#00A3A1', fontSize: 10, fontWeight: 'bold' }}>{t('completed', state.language)}</Text>
                 </View>
               )}
             </TouchableOpacity>
           ) : (
-            <Text style={styles.focusTitle}>{focusTask ? focusTask.title : 'Solo Daily Tasks'}</Text>
+            <Text style={styles.focusTitle}>{focusTask ? focusTask.title : t('no_tasks_today', state.language)}</Text>
           )}
 
           <Text style={styles.focusDescription}>
@@ -110,7 +111,7 @@ export default function TodayScreen({ navigation }: Props) {
               {focusTask.postponed ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAEAEA', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20, marginTop: 12 }}>
                   <Ionicons name="calendar-outline" size={14} color="#5A6B6B" />
-                  <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '500', marginLeft: 8 }}>Rimandato al Venerdì</Text>
+                  <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '500', marginLeft: 8 }}>{t('postponed', state.language)}</Text>
                 </View>
               ) : (
                 <>
@@ -129,7 +130,7 @@ export default function TodayScreen({ navigation }: Props) {
                       onPress={() => postponeTaskToFriday(focusTask.id)}
                     >
                       <Ionicons name="time-outline" size={16} color="#5A6B6B" />
-                      <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '600', marginLeft: 6 }}>Rimanda a Venerdì</Text>
+                      <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '600', marginLeft: 6 }}>{t('postpone_to_friday', state.language)}</Text>
                     </TouchableOpacity>
                   )}
                 </>

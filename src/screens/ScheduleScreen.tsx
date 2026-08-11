@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
+import { guides as defaultGuides } from '../data/guidesAndRecipes';
 
 const DAYS = [
   { short: 'LUN', key: 'Lunedì' },
@@ -20,10 +22,32 @@ interface Props {
 }
 
 export default function ScheduleScreen({ navigation }: Props) {
-  const { state, toggleTask, postponeTaskToFriday } = useAppContext();
+  const { state, toggleTask, postponeTaskToFriday, toggleMonthlyTask, resetMonthlyTasks } = useAppContext();
   
   const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; 
   const [selectedDay, setSelectedDay] = useState(currentDayIndex);
+  const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
+
+  const monthlyGuideIds: Record<string, string> = {
+    'm1': 'filtri-aria',
+    'm2': 'lampadari-ventilatori',
+    'm3': 'muri-interruttori',
+    'm4': 'materasso-sanitize',
+    'm5': 'macchina-caffe'
+  };
+
+  const handleOpenMonthlyGuide = (taskId: string) => {
+    const guideId = monthlyGuideIds[taskId];
+    if (guideId) {
+      const guide = defaultGuides.find(g => g.id === guideId);
+      if (guide) {
+        navigation.navigate('GuidesStack', { 
+          screen: 'GuideDetail', 
+          params: { item: guide, type: 'guide' } 
+        });
+      }
+    }
+  };
 
   const pastMissedTasks = state.weeklyTasks.filter(t => {
     if (t.completed || t.type === 'catch-all') return false;
@@ -37,17 +61,35 @@ export default function ScheduleScreen({ navigation }: Props) {
         
         {/* Header */}
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>CALENDARIO SETTIMANALE</Text>
+          <Text style={styles.headerTitle}>{t('planning', state.language)}</Text>
           <TouchableOpacity 
             style={styles.editButton}
             onPress={() => navigation.navigate('EditSchedule')}
           >
             <Feather name="edit-2" size={12} color="#1A2F2F" />
-            <Text style={styles.editButtonText}>Modifica</Text>
+            <Text style={styles.editButtonText}>{t('edit', state.language)}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Days Filter Bar */}
+        {/* Segmented Control */}
+        <View style={styles.segmentContainer}>
+          <TouchableOpacity 
+            style={[styles.segmentButton, viewMode === 'weekly' && styles.segmentActive]}
+            onPress={() => setViewMode('weekly')}
+          >
+            <Text style={[styles.segmentText, viewMode === 'weekly' && styles.segmentTextActive]}>{t('weekly', state.language)}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.segmentButton, viewMode === 'monthly' && styles.segmentActive]}
+            onPress={() => setViewMode('monthly')}
+          >
+            <Text style={[styles.segmentText, viewMode === 'monthly' && styles.segmentTextActive]}>{t('monthly', state.language)}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {viewMode === 'weekly' ? (
+          <>
+            {/* Days Filter Bar */}
         <View style={styles.daysBarWrapper}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daysBar}>
             {DAYS.map((day, index) => {
@@ -100,15 +142,15 @@ export default function ScheduleScreen({ navigation }: Props) {
 
                   {item.completed ? (
                     <View style={styles.badgeCompleted}>
-                      <Text style={styles.badgeCompletedText}>Completato</Text>
+                      <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
                     </View>
                   ) : item.postponed ? (
                     <View style={[styles.badgePending, { backgroundColor: '#E0EAE9' }]}>
-                      <Text style={[styles.badgePendingText, { color: '#5A6B6B' }]}>Rimandato</Text>
+                      <Text style={[styles.badgePendingText, { color: '#5A6B6B' }]}>{t('postponed', state.language)}</Text>
                     </View>
                   ) : (
                     <View style={styles.badgePending}>
-                      <Text style={styles.badgePendingText}>In corso</Text>
+                      <Text style={styles.badgePendingText}>{t('in_progress', state.language)}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -119,7 +161,7 @@ export default function ScheduleScreen({ navigation }: Props) {
                     onPress={() => postponeTaskToFriday(item.id)}
                   >
                     <Feather name="clock" size={14} color="#5A6B6B" />
-                    <Text style={{ fontSize: 12, color: '#5A6B6B', fontWeight: 'bold', marginLeft: 6 }}>Rimanda a Venerdì</Text>
+                    <Text style={{ fontSize: 12, color: '#5A6B6B', fontWeight: 'bold', marginLeft: 6 }}>{t('postpone_to_friday', state.language)}</Text>
                   </TouchableOpacity>
                 )}
 
@@ -128,9 +170,9 @@ export default function ScheduleScreen({ navigation }: Props) {
                   <View style={styles.catchAllContainer}>
                     <View style={styles.catchAllHeader}>
                       <Feather name="inbox" size={16} color="#8A7B66" />
-                      <Text style={styles.catchAllTitle}>VENERDÌ: CATCH-ALL DAY (RECUPERO)</Text>
+                      <Text style={styles.catchAllTitle}>{t('catch_all_friday', state.language)}</Text>
                     </View>
-                    <Text style={styles.catchAllSubtitle}>Task arretrate recuperate automaticamente:</Text>
+                    <Text style={styles.catchAllSubtitle}>{t('catch_all_subtitle', state.language)}</Text>
 
                     {pastMissedTasks && pastMissedTasks.length > 0 ? (
                       pastMissedTasks.map((task) => (
@@ -139,14 +181,71 @@ export default function ScheduleScreen({ navigation }: Props) {
                         </View>
                       ))
                     ) : (
-                      <Text style={styles.catchAllEmpty}>🎉 Nessuna task saltata questa settimana!</Text>
+                      <Text style={styles.catchAllEmpty}>{t('no_missed_tasks', state.language)}</Text>
                     )}
                   </View>
                 )}
               </View>
             ));
           })}
-        </View>
+          </View>
+          </>
+        ) : (
+          <View style={styles.monthlyContainer}>
+            <View style={styles.monthlyHeader}>
+              <Text style={styles.monthlyTitle}>{t('monthly_tasks', state.language)}</Text>
+              <TouchableOpacity onPress={() => {
+                if (window.confirm) {
+                  if (window.confirm(t('reset_monthly_confirm', state.language))) resetMonthlyTasks();
+                } else {
+                  Alert.alert(t('reset_monthly', state.language), t('reset_monthly_confirm', state.language), [
+                    { text: t('cancel', state.language), style: "cancel" },
+                    { text: t('reset', state.language), style: "destructive", onPress: resetMonthlyTasks }
+                  ]);
+                }
+              }} style={styles.resetButton}>
+                <Feather name="rotate-ccw" size={14} color="#8A7B66" />
+                <Text style={styles.resetButtonText}>{t('reset', state.language)}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.monthlySubtitle}>{t('monthly_subtitle', state.language)}</Text>
+            
+            <View style={styles.cardsList}>
+              {state.monthlyTasks.map(task => (
+                <View key={task.id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.leftSection}>
+                      <TouchableOpacity
+                        style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+                        onPress={() => toggleMonthlyTask(task.id)}
+                      >
+                        {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)}>
+                        <Text style={[styles.taskTitle, task.completed && styles.taskCompleted]}>{task.title}</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <TouchableOpacity onPress={() => handleOpenMonthlyGuide(task.id)} style={{ padding: 4 }}>
+                        <Feather name="info" size={20} color="#8A7B66" />
+                      </TouchableOpacity>
+                      {task.completed ? (
+                        <View style={styles.badgeCompleted}>
+                          <Text style={styles.badgeCompletedText}>{t('completed', state.language)}</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.badgePending}>
+                          <Text style={styles.badgePendingText}>{t('pending', state.language)}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -160,6 +259,17 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
   editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E0F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
   editButtonText: { color: '#1A2F2F', fontSize: 12, fontWeight: '600' },
+  segmentContainer: { flexDirection: 'row', backgroundColor: '#E0EAE9', borderRadius: 20, padding: 4, marginBottom: 20 },
+  segmentButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 16 },
+  segmentActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  segmentText: { color: '#5A6B6B', fontSize: 14, fontWeight: '600' },
+  segmentTextActive: { color: '#1A2F2F', fontWeight: '800' },
+  monthlyContainer: { marginTop: 10 },
+  monthlyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  monthlyTitle: { fontSize: 16, fontWeight: '800', color: '#1A2F2F' },
+  monthlySubtitle: { fontSize: 14, color: '#5A6B6B', marginBottom: 20 },
+  resetButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3E8D6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
+  resetButtonText: { color: '#8A7B66', fontSize: 12, fontWeight: '700' },
   daysBarWrapper: { marginBottom: 24 },
   daysBar: { flexDirection: 'row' },
   dayChip: { backgroundColor: '#FFFFFF', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 1, borderColor: '#FFFFFF', elevation: 1, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.05, shadowRadius: 2 },

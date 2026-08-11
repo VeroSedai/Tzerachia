@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Ale
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 import { RootStackParamList } from '../types';
 import { requestNotificationPermissions, scheduleDailyReminder, cancelAllReminders } from '../services/notificationService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
-  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime } = useAppContext();
+  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage } = useAppContext();
   
   const [timeInput, setTimeInput] = useState(state.reminderTime || '09:00');
 
@@ -113,19 +114,19 @@ export default function SettingsScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#1A2F2F" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Impostazioni</Text>
+        <Text style={styles.headerTitle}>{t('settings', state.language)}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.sectionTitle}>NOTIFICHE</Text>
+        <Text style={styles.sectionTitle}>{t('notifications', state.language)}</Text>
         
         <View style={styles.settingItem}>
           <View style={[styles.iconContainer, { backgroundColor: '#FFF4E5' }]}>
             <Feather name="bell" size={20} color="#F39C12" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Promemoria Giornalieri</Text>
+            <Text style={styles.settingTitle}>{t('daily_reminders', state.language)}</Text>
             <Text style={styles.settingDescription}>Ricevi un avviso per il focus quotidiano</Text>
           </View>
           <Switch 
@@ -138,7 +139,7 @@ export default function SettingsScreen({ navigation }: Props) {
         {state.notificationsEnabled && (
           <View style={styles.settingItem}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingTitle}>Orario Promemoria</Text>
+              <Text style={styles.settingTitle}>{t('reminder_time', state.language)}</Text>
               <Text style={styles.settingDescription}>A che ora vuoi ricevere l'avviso?</Text>
             </View>
             <TextInput
@@ -153,14 +154,31 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         )}
 
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>GESTIONE DATI</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('language', state.language)}</Text>
+        
+        <View style={styles.segmentContainer}>
+          <TouchableOpacity 
+            style={[styles.segmentButton, state.language === 'it' && styles.segmentActive]}
+            onPress={() => setLanguage('it')}
+          >
+            <Text style={[styles.segmentText, state.language === 'it' && styles.segmentTextActive]}>Italiano 🇮🇹</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.segmentButton, state.language === 'en' && styles.segmentActive]}
+            onPress={() => setLanguage('en')}
+          >
+            <Text style={[styles.segmentText, state.language === 'en' && styles.segmentTextActive]}>English 🇬🇧</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('data_management', state.language)}</Text>
 
         <TouchableOpacity style={styles.settingItem} onPress={handleResetDaily}>
           <View style={styles.iconContainer}>
             <Feather name="rotate-ccw" size={20} color="#00A3A1" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Resetta Daily Tasks</Text>
+            <Text style={styles.settingTitle}>{t('reset_daily', state.language)}</Text>
             <Text style={styles.settingDescription}>Azzera le 5 task giornaliere di oggi</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
@@ -171,7 +189,7 @@ export default function SettingsScreen({ navigation }: Props) {
             <Feather name="x-circle" size={20} color="#E67E22" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Resetta Sfida Attiva</Text>
+            <Text style={styles.settingTitle}>{t('reset_challenges', state.language)}</Text>
             <Text style={styles.settingDescription}>Cancella i progressi della sfida in corso</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
@@ -182,7 +200,7 @@ export default function SettingsScreen({ navigation }: Props) {
             <Feather name="trash-2" size={20} color="#FF6B6B" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>Ripristina Impostazioni</Text>
+            <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>{t('factory_reset', state.language)}</Text>
             <Text style={styles.settingDescription}>Elimina tutti i dati e riporta l'app a zero</Text>
           </View>
         </TouchableOpacity>
@@ -205,4 +223,9 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 16, fontWeight: '600', color: '#1A2F2F', marginBottom: 4 },
   settingDescription: { fontSize: 13, color: '#8A9A9A' },
   timeInput: { backgroundColor: '#F0F4F4', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 16, fontWeight: 'bold', color: '#1A2F2F', textAlign: 'center', width: 70 },
+  segmentContainer: { flexDirection: 'row', backgroundColor: '#E0EAE9', borderRadius: 16, padding: 4, marginBottom: 12 },
+  segmentButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
+  segmentActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  segmentText: { color: '#5A6B6B', fontSize: 14, fontWeight: '600' },
+  segmentTextActive: { color: '#1A2F2F', fontWeight: '800' },
 });
