@@ -10,6 +10,7 @@ Tzerachìa is a beautiful mobile application designed to simplify and organize d
 - **Challenges**: 7- or 28-day challenges to get your home back in shape from scratch, trackable step-by-step.
 - **DIY Guides & Recipes**: A catalog of recipes for making natural cleaners (e.g., vinegar and baking soda) and quick guides ("Speed Cleaning"). Users can also add their own custom guides and recipes!
 - **Local Notifications**: Configurable daily reminders so you never forget your 15 minutes of focus.
+- **Multilanguage Support**: Fully localized in both English and Italian, dynamically switchable from the settings.
 
 ## App Screenshots
 
@@ -24,13 +25,18 @@ Here is a preview of the user interface:
 ### Weekly Schedule
 <img src="image-2.png" width="250" alt="Weekly Schedule Screen" />
 
+### Cloud Sync & Settings
+<img src="image-3.png" width="250" alt="Settings and Sync Screen" />
+
 ## Technologies Used
 
 - **React Native** & **Expo**
 - **TypeScript** for type safety
 - **React Navigation** (Bottom Tabs & Native Stack)
+- **Supabase** for PostgreSQL database, anonymous authentication, and realtime sync
 - **AsyncStorage** for saving local data offline
 - **Expo Notifications** for local reminders
+- **i18n-js** for localization (IT/EN support)
 
 ## How to Run the Project
 
@@ -148,3 +154,45 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_tasks;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_guides;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_recipes;
 ```
+
+## Folder Structure
+
+A quick overview of the project's organization to help you navigate the codebase:
+
+```text
+SimplyClean/
+├── assets/             # App icons, splash screens, and static images
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── context/        # AppContext for global state orchestration
+│   ├── data/           # Default recipes, guides, and challenges
+│   ├── hooks/          # Custom hooks (e.g., useTasks, useHouseholdSync)
+│   ├── i18n/           # Translations and localization (IT/EN)
+│   ├── lib/            # External library configurations (e.g., Supabase)
+│   ├── screens/        # Main application screens (Home, Settings, etc.)
+│   ├── services/       # Services for storage and notifications
+│   ├── types/          # TypeScript definitions
+│   └── utils/          # Helper functions and utilities
+├── App.tsx             # Main application entry point
+├── app.json            # Expo configuration
+└── package.json        # Dependencies and scripts
+```
+
+## Build & Deploy
+
+This project is configured to use **EAS Build** (Expo Application Services) for generating standalone binaries.
+
+1. Install the EAS CLI: `npm install -g eas-cli`
+2. Log in to your Expo account: `eas login`
+3. Build for Android: `eas build -p android --profile preview`
+4. Build for iOS: `eas build -p ios`
+
+## Contributing
+
+Contributions are welcome! If you have a feature request, bug report, or a suggestion, please open an issue or submit a pull request. 
+When contributing, please ensure your code follows the existing style and passes TypeScript checks (`npx tsc --noEmit`).
+
+## License
+
+This project is open-source and available under the [MIT License](LICENSE).
+

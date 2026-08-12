@@ -26,6 +26,7 @@ interface AppContextProps {
   catchAllTasks: Task[];
   createHousehold: (name?: string) => Promise<void>;
   joinHousehold: (inviteCode: string) => Promise<void>;
+  leaveHousehold: () => Promise<void>;
   addCustomTask: (title: string, date: string) => void;
   toggleCustomTask: (id: string) => void;
   deleteCustomTask: (id: string) => void;
@@ -188,6 +189,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, [fetchHousehold]);
 
+  const leaveHousehold = useCallback(async () => {
+    if (!state.household || !state.session) return;
+    
+    const { error } = await supabase
+      .from('household_members')
+      .delete()
+      .eq('household_id', state.household.id)
+      .eq('user_id', state.session.user.id);
+      
+    if (error) {
+      console.error("Error leaving household:", error);
+      Alert.alert("Errore", "Impossibile lasciare la casa.");
+      return;
+    }
+
+    setState(prev => ({ ...prev, household: null }));
+  }, [state.household, state.session]);
+
   const setTimer = useCallback((duration: number) => {
     setState(prev => ({ ...prev, timerDuration: duration }));
   }, []);
@@ -220,6 +239,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     state,
     createHousehold,
     joinHousehold,
+    leaveHousehold,
     setTimer,
     toggleTimerActive,
     factoryReset,
@@ -234,6 +254,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     state,
     createHousehold,
     joinHousehold,
+    leaveHousehold,
     setTimer,
     toggleTimerActive,
     factoryReset,

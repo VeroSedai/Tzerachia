@@ -15,7 +15,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks, createHousehold, joinHousehold } = useAppContext();
+  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks, createHousehold, joinHousehold, leaveHousehold } = useAppContext();
   
   const [timeInput, setTimeInput] = useState(state.reminderTime || '09:00');
   
@@ -119,6 +119,26 @@ export default function SettingsScreen({ navigation }: Props) {
           factoryReset();
           Alert.alert("Successo", "L'app è stata riportata alle impostazioni di fabbrica.");
           navigation.navigate('MainTabs');
+        }}
+      ]
+    );
+  };
+
+  const handleLeaveHousehold = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm("Sei sicuro di voler lasciare questa casa? Perderai l'accesso condiviso.")) {
+        leaveHousehold();
+        window.alert("Hai lasciato la casa.");
+      }
+      return;
+    }
+    Alert.alert(
+      "Lascia / Elimina Casa",
+      "Sei sicuro di voler lasciare questa casa? Perderai l'accesso condiviso.",
+      [
+        { text: "Annulla", style: "cancel" },
+        { text: "Lascia", style: "destructive", onPress: () => {
+          leaveHousehold();
         }}
       ]
     );
@@ -263,15 +283,27 @@ export default function SettingsScreen({ navigation }: Props) {
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>CASA CONDIVISA (CLOUD)</Text>
 
         {state.household ? (
-          <View style={styles.settingItem}>
-            <View style={[styles.iconContainer, { backgroundColor: '#E0F4FF' }]}>
-              <Feather name="home" size={20} color="#0099FF" />
+          <>
+            <View style={styles.settingItem}>
+              <View style={[styles.iconContainer, { backgroundColor: '#E0F4FF' }]}>
+                <Feather name="home" size={20} color="#0099FF" />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>{state.household.name || 'La mia Casa'}</Text>
+                <Text style={styles.settingDescription}>Codice Invito: {state.household.invite_code}</Text>
+              </View>
             </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingTitle}>{state.household.name || 'La mia Casa'}</Text>
-              <Text style={styles.settingDescription}>Codice Invito: {state.household.invite_code}</Text>
-            </View>
-          </View>
+
+            <TouchableOpacity style={[styles.settingItem, styles.dangerItem]} onPress={handleLeaveHousehold}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FFF0F0' }]}>
+                <Feather name="log-out" size={20} color="#FF6B6B" />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>Lascia / Elimina Casa</Text>
+                <Text style={styles.settingDescription}>Abbandona il gruppo condiviso</Text>
+              </View>
+            </TouchableOpacity>
+          </>
         ) : (
           <>
             <View style={styles.settingItem}>
