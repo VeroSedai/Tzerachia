@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -94,11 +94,32 @@ const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMisse
 
 export default function ScheduleScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { state, toggleTask, postponeTaskToFriday, toggleMonthlyTask, resetMonthlyTasks } = useAppContext();
+  const { state, toggleTask, postponeTaskToFriday, toggleMonthlyTask, resetMonthlyTasks, addCustomTask, toggleCustomTask, deleteCustomTask } = useAppContext();
   
   const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; 
   const [selectedDay, setSelectedDay] = useState(currentDayIndex);
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
+
+  const [newCustomTasks, setNewCustomTasks] = useState<Record<number, string>>({});
+  const [addingForDay, setAddingForDay] = useState<number | null>(null);
+
+  const getDateForDayIndex = (dayIndex: number) => {
+    const today = new Date();
+    const diff = dayIndex - currentDayIndex;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+    return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
+  };
+
+  const handleAddCustomTask = (dayIndex: number) => {
+    const text = newCustomTasks[dayIndex];
+    if (text && text.trim()) {
+      const dateStr = getDateForDayIndex(dayIndex);
+      addCustomTask(text.trim(), dateStr);
+      setNewCustomTasks(prev => ({ ...prev, [dayIndex]: '' }));
+      setAddingForDay(null);
+    }
+  };
 
   const monthlyGuideIds: Record<string, string> = {
     'm1': 'filtri-aria',
@@ -128,18 +149,23 @@ export default function ScheduleScreen({ navigation }: Props) {
   }), [state.weeklyTasks]);
 
   const weeklyData = useMemo(() => {
-    return DAYS.map(dayInfo => {
+    return DAYS.map((dayInfo, index) => {
       const isCatchAllDay = dayInfo.key === 'Venerdì';
       const isSunday = dayInfo.key === 'Domenica';
       const dayTasks = state.weeklyTasks.filter(t => t.dayOfWeek?.toLowerCase() === dayInfo.key.toLowerCase());
       
+      const targetDate = getDateForDayIndex(index);
+      const customDayTasks = state.customTasks.filter(t => t.date === targetDate);
+
       const items = isSunday 
         ? [{ id: 'domenica-task', taskName: 'Solo Daily Tasks', completed: false, day: dayInfo.key, postponed: false }]
         : dayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key, postponed: t.postponed }));
 
-      return { dayInfo, isCatchAllDay, isSunday, items };
+      const customItems = customDayTasks.map(t => ({ id: t.id, taskName: t.title, completed: t.completed, day: dayInfo.key, isCustom: true }));
+
+      return { dayInfo, index, isCatchAllDay, isSunday, items, customItems };
     });
-  }, [state.weeklyTasks]);
+  }, [state.weeklyTasks, state.customTasks, currentDayIndex]);
 
   const renderWeeklyItem = useCallback(({ item }: any) => {
     return (
@@ -157,9 +183,54 @@ export default function ScheduleScreen({ navigation }: Props) {
             postponeTaskToFriday={postponeTaskToFriday}
           />
         ))}
+        {item.customItems.map((taskItem: any) => (
+          <View key={`${item.dayInfo.key}-${taskItem.id}`} style={[styles.card, { marginTop: 8 }]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.leftSection}>
+                <TouchableOpacity
+                  style={[styles.checkbox, taskItem.completed && styles.checkboxCompleted]}
+                  onPress={() => toggleCustomTask(taskItem.id)}
+                >
+                  {taskItem.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+                </TouchableOpacity>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.taskTitle, taskItem.completed && styles.taskCompleted, { flexShrink: 1 }]}>{taskItem.taskName}</Text>
+                  <Text style={{ fontSize: 12, color: '#8A7B66', marginLeft: 6 }}>(Extra)</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => deleteCustomTask(taskItem.id)} style={{ padding: 4 }}>
+                <Feather name="trash-2" size={18} color="#FF6B6B" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+
+        {addingForDay === item.index ? (
+          <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D0E3E3', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
+              placeholder="Nuova attività extra..."
+              value={newCustomTasks[item.index] || ''}
+              onChangeText={(text) => setNewCustomTasks(prev => ({ ...prev, [item.index]: text }))}
+              onSubmitEditing={() => handleAddCustomTask(item.index)}
+              autoFocus
+            />
+            <TouchableOpacity onPress={() => handleAddCustomTask(item.index)} style={{ backgroundColor: '#00A3A1', padding: 12, borderRadius: 16 }}>
+              <Feather name="check" size={16} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAddingForDay(null)} style={{ backgroundColor: '#F0F4F4', padding: 12, borderRadius: 16, marginLeft: 8 }}>
+              <Feather name="x" size={16} color="#5A6B6B" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }} onPress={() => setAddingForDay(item.index)}>
+            <Feather name="plus" size={16} color="#00A3A1" />
+            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>Aggiungi attività</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
-  }, [pastMissedTasks, state.language, toggleTask, postponeTaskToFriday]);
+  }, [pastMissedTasks, state.language, toggleTask, postponeTaskToFriday, addingForDay, newCustomTasks, toggleCustomTask, deleteCustomTask]);
 
   const renderMonthlyItem = useCallback(({ item: task }: any) => (
     <View style={styles.card}>
@@ -271,8 +342,8 @@ export default function ScheduleScreen({ navigation }: Props) {
       <FlatList
         style={styles.container}
         contentContainerStyle={styles.content}
-        data={viewMode === 'weekly' ? weeklyData : state.monthlyTasks}
-        keyExtractor={(item: any) => viewMode === 'weekly' ? item.dayInfo.key : item.id}
+        data={viewMode === 'weekly' ? [weeklyData[selectedDay]] : state.monthlyTasks}
+        keyExtractor={(item: any, index: number) => viewMode === 'weekly' ? item.dayInfo.key : item.id}
         renderItem={viewMode === 'weekly' ? renderWeeklyItem : renderMonthlyItem}
         ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}

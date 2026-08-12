@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { Vibration, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Task, Challenge, AppState, Guide, Recipe } from '../types';
+import { Task, CustomTask, Challenge, AppState, Guide, Recipe } from '../types';
 import * as Linking from 'expo-linking';
 import { importAppStatePayload } from '../utils/syncUtils';
 import { challengeData } from '../data/guidesAndRecipes';
@@ -9,6 +9,9 @@ import { challengeData } from '../data/guidesAndRecipes';
 interface AppContextProps {
   state: AppState;
   catchAllTasks: Task[];
+  addCustomTask: (title: string, date: string) => void;
+  toggleCustomTask: (id: string) => void;
+  deleteCustomTask: (id: string) => void;
   toggleTask: (taskId: string) => void;
   reassignTaskDay: (taskId: string, newDay: string) => void;
   postponeTaskToFriday: (taskId: string) => void;
@@ -47,6 +50,7 @@ const CUSTOM_CATEGORIES_KEY = '@simplyclean_custom_categories';
 const NOTIFICATIONS_ENABLED_KEY = '@simplyclean_notifications_enabled';
 const REMINDER_TIME_KEY = '@simplyclean_reminder_time';
 const LANGUAGE_KEY = '@simplyclean_language';
+const CUSTOM_TASKS_KEY = '@simplyclean_custom_tasks';
 
 const defaultState: AppState = {
   lastResetDate: new Date().toISOString().split('T')[0],
@@ -57,6 +61,7 @@ const defaultState: AppState = {
     { id: 'daily-4', title: 'Riordinare', completed: false, type: 'daily' },
     { id: 'daily-5', title: 'Fare il bucato', completed: false, type: 'daily' }
   ],
+  customTasks: [],
   weeklyTasks: [
     { id: 'weekly-1', title: 'Pulizia bagni', completed: false, type: 'weekly', dayOfWeek: 'Lunedì' },
     { id: 'weekly-2', title: 'Spolverare', completed: false, type: 'weekly', dayOfWeek: 'Martedì' },
@@ -134,7 +139,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr] = await Promise.all([
+        const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr, customTasksStr] = await Promise.all([
           AsyncStorage.getItem(DAILY_KEY),
           AsyncStorage.getItem(WEEKLY_KEY),
           AsyncStorage.getItem(MONTHLY_KEY),
@@ -145,7 +150,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY),
           AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
           AsyncStorage.getItem(REMINDER_TIME_KEY),
-          AsyncStorage.getItem(LANGUAGE_KEY)
+          AsyncStorage.getItem(LANGUAGE_KEY),
+          AsyncStorage.getItem(CUSTOM_TASKS_KEY)
         ]);
 
         const safeParse = (str: string | null, fallback: any) => {
@@ -160,6 +166,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const today = new Date().toISOString().split('T')[0];
         let dailyTasks = safeParse(dailyStr, defaultState.dailyTasks);
+        let customTasks = safeParse(customTasksStr, defaultState.customTasks);
         const weeklyTasks = safeParse(weeklyStr, defaultState.weeklyTasks);
         const monthlyTasks = safeParse(monthlyStr, defaultState.monthlyTasks);
         const activeChallenge = safeParse(challengesStr, defaultState.activeChallenge);
@@ -173,6 +180,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Auto Reset Logic
         if (lastDateStr !== today) {
           dailyTasks = dailyTasks.map((t: Task) => ({ ...t, completed: false }));
+          // We could auto-clean old custom tasks here if desired, but let's just keep them or user deletes them
           try {
             await safeSetItem(LAST_DATE_KEY, today);
             await safeSetItem(DAILY_KEY, dailyTasks);
@@ -184,6 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setState({
           lastResetDate: today,
           dailyTasks,
+          customTasks,
           weeklyTasks,
           monthlyTasks,
           activeChallenge,
@@ -275,6 +284,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
       }
       return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly };
+    });
+  }, []);
+
+  const addCustomTask = useCallback(async (title: string, date: string) => {
+    setState(prev => {
+      const newTask: CustomTask = {
+        id: `custom-${Date.now()}`,
+        title,
+        date,
+        completed: false,
+        isCustom: true
+      };
+      const updated = [...prev.customTasks, newTask];
+      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
+      return { ...prev, customTasks: updated };
+    });
+  }, []);
+
+  const toggleCustomTask = useCallback(async (id: string) => {
+    setState(prev => {
+      const updated = prev.customTasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
+      return { ...prev, customTasks: updated };
+    });
+  }, []);
+
+  const deleteCustomTask = useCallback(async (id: string) => {
+    setState(prev => {
+      const updated = prev.customTasks.filter(t => t.id !== id);
+      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
+      return { ...prev, customTasks: updated };
     });
   }, []);
 
@@ -478,6 +518,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const contextValue = useMemo(() => ({
     state,
     catchAllTasks,
+    addCustomTask,
+    toggleCustomTask,
+    deleteCustomTask,
     toggleTask,
     reassignTaskDay,
     postponeTaskToFriday,
@@ -504,7 +547,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLanguage,
     syncTasks,
   }), [
-    state, catchAllTasks, toggleTask, reassignTaskDay, postponeTaskToFriday, startChallenge, advanceChallengeDay, setTimer, toggleTimerActive, toggleChallengeSubtask, toggleMonthlyTask, addCustomGuide, addCustomRecipe, deleteCustomGuide, deleteCustomRecipe, addCustomCategory, deleteCustomCategory, updateWeeklySchedule, resetWeeklySchedule, resetMonthlyTasks, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks
+    state, catchAllTasks, addCustomTask, toggleCustomTask, deleteCustomTask, toggleTask, reassignTaskDay, postponeTaskToFriday, startChallenge, advanceChallengeDay, setTimer, toggleTimerActive, toggleChallengeSubtask, toggleMonthlyTask, addCustomGuide, addCustomRecipe, deleteCustomGuide, deleteCustomRecipe, addCustomCategory, deleteCustomCategory, updateWeeklySchedule, resetWeeklySchedule, resetMonthlyTasks, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks
   ]);
 
   return (

@@ -9,6 +9,14 @@ export interface Task {
   postponed?: boolean;
 }
 
+export interface CustomTask {
+  id: string;
+  title: string;
+  date: string;
+  completed: boolean;
+  isCustom: true;
+}
+
 export interface WeeklySchedule {
   [day: string]: string; // e.g. "Monday" -> "Bagni"
 }
@@ -59,6 +67,7 @@ export interface Guide {
 export interface AppState {
   lastResetDate: string; // YYYY-MM-DD
   dailyTasks: Task[];
+  customTasks: CustomTask[];
   weeklyTasks: Task[];
   monthlyTasks: Task[];
   activeChallenge: Challenge | null;

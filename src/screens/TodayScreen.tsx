@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,7 +13,10 @@ interface Props {
 
 export default function TodayScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { state, toggleTask, postponeTaskToFriday } = useAppContext();
+  const { state, toggleTask, postponeTaskToFriday, addCustomTask, toggleCustomTask, deleteCustomTask } = useAppContext();
+  
+  const [newCustomTask, setNewCustomTask] = useState('');
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
   
   const formatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
   const dateString = formatter.format(new Date()).toUpperCase();
@@ -21,6 +24,18 @@ export default function TodayScreen({ navigation }: Props) {
 
   const focusTask = state.weeklyTasks.find(t => t.dayOfWeek?.toLowerCase() === dayName.toLowerCase());
   const completedDailyTasksCount = state.dailyTasks.filter(t => t.completed).length;
+
+  const today = new Date();
+  const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todaysCustomTasks = state.customTasks.filter(t => t.date === todayDateString);
+
+  const handleAddCustomTask = () => {
+    if (newCustomTask.trim()) {
+      addCustomTask(newCustomTask.trim(), todayDateString);
+      setNewCustomTask('');
+      setIsAddingCustom(false);
+    }
+  };
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
@@ -64,7 +79,50 @@ export default function TodayScreen({ navigation }: Props) {
               </Text>
             </TouchableOpacity>
           ))}
+          {todaysCustomTasks.map(task => (
+            <View key={task.id} style={styles.taskCard}>
+              <TouchableOpacity 
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+                onPress={() => toggleCustomTask(task.id)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, task.completed && styles.checkboxCompleted]}>
+                  {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
+                </View>
+                <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
+                  {task.title} <Text style={{ fontSize: 12, color: '#8A7B66' }}>(Extra)</Text>
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => deleteCustomTask(task.id)} style={{ padding: 4 }}>
+                <Feather name="trash-2" size={18} color="#FF6B6B" />
+              </TouchableOpacity>
+            </View>
+          ))}
         </View>
+
+        {isAddingCustom ? (
+          <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D0E3E3', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
+              placeholder="Nuova attività extra..."
+              value={newCustomTask}
+              onChangeText={setNewCustomTask}
+              onSubmitEditing={handleAddCustomTask}
+              autoFocus
+            />
+            <TouchableOpacity onPress={handleAddCustomTask} style={{ backgroundColor: '#00A3A1', padding: 12, borderRadius: 16 }}>
+              <Feather name="check" size={16} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsAddingCustom(false)} style={{ backgroundColor: '#F0F4F4', padding: 12, borderRadius: 16, marginLeft: 8 }}>
+              <Feather name="x" size={16} color="#5A6B6B" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }} onPress={() => setIsAddingCustom(true)}>
+            <Feather name="plus" size={16} color="#00A3A1" />
+            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>Aggiungi attività</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Focus del Giorno */}
         <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>{t('weekly_focus', state.language)}</Text>
