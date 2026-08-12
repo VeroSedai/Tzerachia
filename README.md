@@ -38,3 +38,113 @@ Here is a preview of the user interface:
 2. Run `npm install` or `yarn install`.
 3. Start the development server with `npx expo start`.
 4. Use the **Expo Go** app on your smartphone by scanning the QR Code, or launch an iOS/Android emulator. For Web usage, press `w` in the terminal.
+
+## Backend Setup (Supabase)
+
+This project relies on Supabase for real-time data synchronization between members of the same household. To configure your Supabase environment from scratch, follow these steps:
+
+### 1. Prerequisites
+- Create a project on [Supabase](https://supabase.com/).
+- Go to the **Authentication** -> **Providers** section and enable **Anonymous Sign-ins**. This allows users to start using the app immediately without registering via email/password, while maintaining device synchronization.
+
+### 2. Environment Variables
+Create a `.env` file in the root of the project (at the same level as `package.json`) and insert your Supabase keys, which you can find in **Project Settings** -> **API**:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 3. Database Setup (SQL Script)
+Go to the **SQL Editor** section in Supabase and create a new query. Paste and run the following SQL script to create the necessary tables, set up Row Level Security (RLS) policies, and enable real-time synchronization:
+
+```sql
+-- 1. Create Households table
+CREATE TABLE public.households (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  invite_code text NOT NULL UNIQUE,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. Create Household Members table
+CREATE TABLE public.household_members (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  household_id uuid REFERENCES public.households(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  joined_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(household_id, user_id)
+);
+
+-- 3. Create Task Completions table
+CREATE TABLE public.task_completions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  household_id uuid REFERENCES public.households(id) ON DELETE CASCADE,
+  task_id text NOT NULL,
+  completed_at date NOT NULL,
+  completed_by uuid NOT NULL,
+  UNIQUE(household_id, task_id, completed_at)
+);
+
+-- 4. Create Custom Tasks table
+CREATE TABLE public.custom_tasks (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  household_id uuid REFERENCES public.households(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  date date NOT NULL,
+  completed boolean DEFAULT false,
+  created_by uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 5. Create Custom Guides table
+CREATE TABLE public.custom_guides (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  household_id uuid REFERENCES public.households(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  category text,
+  content text NOT NULL,
+  created_by uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. Create Custom Recipes table
+CREATE TABLE public.custom_recipes (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  household_id uuid REFERENCES public.households(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  category text,
+  ingredients jsonb DEFAULT '[]'::jsonb,
+  steps jsonb DEFAULT '[]'::jsonb,
+  created_by uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 7. Enable Row Level Security (RLS)
+ALTER TABLE public.households ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.household_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.task_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.custom_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.custom_guides ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.custom_recipes ENABLE ROW LEVEL SECURITY;
+
+-- 8. Setup RLS Policies (Allow access to household members)
+-- For simplicity, we allow all authenticated users (even anonymous) 
+-- to select, insert, update, and delete for their household.
+-- Note: In a strict production app, policies should verify `user_id` matches auth.uid().
+
+CREATE POLICY "Enable all access for all users" ON public.households FOR ALL USING (true);
+CREATE POLICY "Enable all access for all users" ON public.household_members FOR ALL USING (true);
+CREATE POLICY "Enable all access for all users" ON public.task_completions FOR ALL USING (true);
+CREATE POLICY "Enable all access for all users" ON public.custom_tasks FOR ALL USING (true);
+CREATE POLICY "Enable all access for all users" ON public.custom_guides FOR ALL USING (true);
+CREATE POLICY "Enable all access for all users" ON public.custom_recipes FOR ALL USING (true);
+
+-- 9. Enable Realtime Sync
+-- Supabase automatically creates a publication named supabase_realtime.
+-- We must explicitly add our tables to this publication for Realtime to work.
+ALTER PUBLICATION supabase_realtime ADD TABLE public.task_completions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_tasks;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_guides;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_recipes;
+```
