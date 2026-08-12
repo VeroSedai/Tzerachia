@@ -83,7 +83,7 @@ export default function ChallengeDetailScreen({ route, navigation }: Props) {
         </View>
 
         <Text style={styles.encouragementText}>
-          Fai del tuo meglio oggi. Se salti una task, nessun problema! L'obiettivo è il progresso, non la perfezione.
+          Fai del tuo meglio oggi. Se salti un' attività, nessun problema! L'obiettivo è il progresso, non la perfezione.
         </Text>
 
         <View style={styles.cardsList}>
