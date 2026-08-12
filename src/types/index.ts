@@ -1,3 +1,5 @@
+import { Session } from '@supabase/supabase-js';
+
 export type TaskType = 'daily' | 'weekly' | 'catch-all' | 'monthly';
 
 export interface Task {
@@ -64,7 +66,15 @@ export interface Guide {
   steps: GuideStep[];
 }
 
+export interface Household {
+  id: string;
+  name?: string;
+  invite_code: string;
+}
+
 export interface AppState {
+  session: Session | null;
+  household: Household | null;
   lastResetDate: string; // YYYY-MM-DD
   dailyTasks: Task[];
   customTasks: CustomTask[];

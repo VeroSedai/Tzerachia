@@ -1,14 +1,31 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { Vibration, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Task, CustomTask, Challenge, AppState, Guide, Recipe } from '../types';
+import { Alert } from 'react-native';
+import { Task, AppState, Guide, Recipe } from '../types';
 import * as Linking from 'expo-linking';
 import { importAppStatePayload } from '../utils/syncUtils';
-import { challengeData } from '../data/guidesAndRecipes';
+import { supabase } from '../lib/supabase';
+import { useTimer } from '../hooks/useTimer';
+import { useHouseholdSync } from '../hooks/useHouseholdSync';
+import { useTasks } from '../hooks/useTasks';
+import { useGuidesAndRecipes } from '../hooks/useGuidesAndRecipes';
+import { useChallenges } from '../hooks/useChallenges';
+import { 
+  loadInitialState, 
+  safeSetItem, 
+  safeClear, 
+  DAILY_KEY, 
+  WEEKLY_KEY, 
+  MONTHLY_KEY, 
+  NOTIFICATIONS_ENABLED_KEY, 
+  REMINDER_TIME_KEY, 
+  LANGUAGE_KEY 
+} from '../services/storageService';
 
 interface AppContextProps {
   state: AppState;
   catchAllTasks: Task[];
+  createHousehold: (name?: string) => Promise<void>;
+  joinHousehold: (inviteCode: string) => Promise<void>;
   addCustomTask: (title: string, date: string) => void;
   toggleCustomTask: (id: string) => void;
   deleteCustomTask: (id: string) => void;
@@ -39,20 +56,9 @@ interface AppContextProps {
   setLanguage: (lang: 'it' | 'en') => void;
 }
 
-const DAILY_KEY = '@simplyclean_daily';
-const WEEKLY_KEY = '@simplyclean_weekly';
-const MONTHLY_KEY = '@simplyclean_monthly';
-const CHALLENGES_KEY = '@simplyclean_challenges';
-const LAST_DATE_KEY = '@simplyclean_last_date';
-const CUSTOM_GUIDES_KEY = '@simplyclean_custom_guides';
-const CUSTOM_RECIPES_KEY = '@simplyclean_custom_recipes';
-const CUSTOM_CATEGORIES_KEY = '@simplyclean_custom_categories';
-const NOTIFICATIONS_ENABLED_KEY = '@simplyclean_notifications_enabled';
-const REMINDER_TIME_KEY = '@simplyclean_reminder_time';
-const LANGUAGE_KEY = '@simplyclean_language';
-const CUSTOM_TASKS_KEY = '@simplyclean_custom_tasks';
-
 const defaultState: AppState = {
+  session: null,
+  household: null,
   lastResetDate: new Date().toISOString().split('T')[0],
   dailyTasks: [
     { id: 'daily-1', title: 'Rifare i letti', completed: false, type: 'daily' },
@@ -94,6 +100,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [state, setState] = useState<AppState>(defaultState);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  useEffect(() => {
+    loadInitialState(setState, setIsLoaded, defaultState);
+  }, []);
+
+  const { fetchHousehold } = useHouseholdSync(setState);
+  useTimer(state.timerActive, setState);
+  
+  const taskActions = useTasks(state, setState);
+  const guideAndRecipeActions = useGuidesAndRecipes(setState);
+  const challengeActions = useChallenges(setState);
+
   const syncTasks = useCallback(async (payloadString: string) => {
     const payload = importAppStatePayload(payloadString);
     if (!payload) {
@@ -102,7 +119,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     
     setState(prev => {
-      // Create new arrays
       const updatedDaily = prev.dailyTasks.map(t => payload.d.includes(t.id) ? { ...t, completed: true } : t);
       const updatedWeekly = prev.weeklyTasks.map(t => payload.w.includes(t.id) ? { ...t, completed: true } : t);
       const updatedMonthly = prev.monthlyTasks.map(t => payload.m.includes(t.id) ? { ...t, completed: true } : t);
@@ -116,7 +132,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
     });
   }, []);
-
 
   useEffect(() => {
     const handleUrl = (event: Linking.EventType) => {
@@ -133,245 +148,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     
     return () => subscription.remove();
-  }, []);
+  }, [syncTasks]);
 
-
-  useEffect(() => {
-    const loadState = async () => {
-      try {
-        const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr, customTasksStr] = await Promise.all([
-          AsyncStorage.getItem(DAILY_KEY),
-          AsyncStorage.getItem(WEEKLY_KEY),
-          AsyncStorage.getItem(MONTHLY_KEY),
-          AsyncStorage.getItem(CHALLENGES_KEY),
-          AsyncStorage.getItem(LAST_DATE_KEY),
-          AsyncStorage.getItem(CUSTOM_GUIDES_KEY),
-          AsyncStorage.getItem(CUSTOM_RECIPES_KEY),
-          AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY),
-          AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
-          AsyncStorage.getItem(REMINDER_TIME_KEY),
-          AsyncStorage.getItem(LANGUAGE_KEY),
-          AsyncStorage.getItem(CUSTOM_TASKS_KEY)
-        ]);
-
-        const safeParse = (str: string | null, fallback: any) => {
-          if (!str) return fallback;
-          try {
-            return JSON.parse(str);
-          } catch (e) {
-            console.error("AsyncStorage Load Error: Failed to parse", str, e);
-            return fallback;
-          }
-        };
-
-        const today = new Date().toISOString().split('T')[0];
-        let dailyTasks = safeParse(dailyStr, defaultState.dailyTasks);
-        let customTasks = safeParse(customTasksStr, defaultState.customTasks);
-        const weeklyTasks = safeParse(weeklyStr, defaultState.weeklyTasks);
-        const monthlyTasks = safeParse(monthlyStr, defaultState.monthlyTasks);
-        const activeChallenge = safeParse(challengesStr, defaultState.activeChallenge);
-        const customGuides = safeParse(customGuidesStr, defaultState.customGuides);
-        const customRecipes = safeParse(customRecipesStr, defaultState.customRecipes);
-        const customCategories = safeParse(customCategoriesStr, defaultState.customCategories);
-        const notificationsEnabled = safeParse(notifEnabledStr, defaultState.notificationsEnabled);
-        const reminderTime = safeParse(reminderTimeStr, defaultState.reminderTime);
-        const language = languageStr === 'en' || languageStr === 'it' ? languageStr : defaultState.language;
-        
-        // Auto Reset Logic
-        if (lastDateStr !== today) {
-          dailyTasks = dailyTasks.map((t: Task) => ({ ...t, completed: false }));
-          // We could auto-clean old custom tasks here if desired, but let's just keep them or user deletes them
-          try {
-            await safeSetItem(LAST_DATE_KEY, today);
-            await safeSetItem(DAILY_KEY, dailyTasks);
-          } catch (e) {
-            console.error("AsyncStorage Save Error during auto-reset:", e);
-          }
+  const createHousehold = useCallback(async (name?: string) => {
+    setState(prev => {
+      if (!prev.session) return prev;
+      (async () => {
+        const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const { data, error } = await supabase.from('households').insert({ name: name || 'La mia Casa', invite_code: inviteCode }).select().single();
+        if (data) {
+          await supabase.from('household_members').insert({ household_id: data.id, user_id: prev.session!.user.id });
+          fetchHousehold(prev.session!.user.id);
+        } else if (error) {
+          Alert.alert("Errore", "Non è stato possibile creare la casa.");
         }
+      })();
+      return prev;
+    });
+  }, [fetchHousehold]);
 
-        setState({
-          lastResetDate: today,
-          dailyTasks,
-          customTasks,
-          weeklyTasks,
-          monthlyTasks,
-          activeChallenge,
-          timerDuration: 15 * 60,
-          timerActive: false,
-          customGuides,
-          customRecipes,
-          customCategories,
-          notificationsEnabled,
-          reminderTime,
-          language,
-        });
-      } catch (error) {
-        console.error('AsyncStorage Load Error:', error);
-      } finally {
-        setIsLoaded(true);
-      }
-    };
-    loadState();
-  }, []);
-
-  // Global Timer Engine
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (state.timerActive) {
-      interval = setInterval(() => {
-        setState(prev => {
-          if (prev.timerDuration <= 1) {
-            clearInterval(interval);
-            Vibration.vibrate([500, 500, 500]);
-            Alert.alert('Tempo scaduto! 🧹', 'Ottimo lavoro con la sessione Simply Clean!');
-            return { ...prev, timerDuration: 0, timerActive: false };
+  const joinHousehold = useCallback(async (inviteCode: string) => {
+    setState(prev => {
+      if (!prev.session) return prev;
+      (async () => {
+        const { data: hh } = await supabase.from('households').select('*').eq('invite_code', inviteCode.toUpperCase()).single();
+        if (hh) {
+          const { error } = await supabase.from('household_members').insert({ household_id: hh.id, user_id: prev.session!.user.id });
+          if (!error) {
+            fetchHousehold(prev.session!.user.id);
+            Alert.alert("Successo", "Ti sei unito alla casa!");
+          } else {
+            Alert.alert("Errore", "Impossibile unirsi alla casa.");
           }
-          return { ...prev, timerDuration: prev.timerDuration - 1 };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [state.timerActive]);
-
-  // Catch-All Logic
-  const catchAllTasks = useMemo(() => {
-    const DAYS_ORDER = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
-    const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; 
-    
-    return state.weeklyTasks.filter(t => {
-      if (t.completed || t.type === 'catch-all' || !t.dayOfWeek) return false;
-      if (t.postponed) return true;
-      const taskDayIndex = DAYS_ORDER.findIndex(d => d.toLowerCase() === t.dayOfWeek?.toLowerCase());
-      return taskDayIndex !== -1 && taskDayIndex < currentDayIndex;
+        } else {
+          Alert.alert("Errore", "Codice invito non valido.");
+        }
+      })();
+      return prev;
     });
-  }, [state.weeklyTasks]);
-
-
-  const safeSetItem = async (key: string, value: any) => {
-    try {
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-      await AsyncStorage.setItem(key, stringValue);
-    } catch (error) {
-      console.error(`AsyncStorage Save Error for key ${key}:`, error);
-    }
-  };
-
-  const safeRemoveItem = async (key: string) => {
-    try {
-      await AsyncStorage.removeItem(key);
-    } catch (error) {
-      console.error(`AsyncStorage Remove Error for key ${key}:`, error);
-    }
-  };
-
-  const safeClear = async () => {
-    try {
-      await AsyncStorage.clear();
-    } catch (error) {
-      console.error("AsyncStorage Clear Error:", error);
-    }
-  };
-
-  const toggleTask = useCallback(async (taskId: string) => {
-    setState(prev => {
-      let updatedDaily = [...prev.dailyTasks];
-      let updatedWeekly = [...prev.weeklyTasks];
-      if (updatedDaily.some(t => t.id === taskId)) {
-        updatedDaily = updatedDaily.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
-        safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
-      } else {
-        updatedWeekly = updatedWeekly.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
-        safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
-      }
-      return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly };
-    });
-  }, []);
-
-  const addCustomTask = useCallback(async (title: string, date: string) => {
-    setState(prev => {
-      const newTask: CustomTask = {
-        id: `custom-${Date.now()}`,
-        title,
-        date,
-        completed: false,
-        isCustom: true
-      };
-      const updated = [...prev.customTasks, newTask];
-      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
-      return { ...prev, customTasks: updated };
-    });
-  }, []);
-
-  const toggleCustomTask = useCallback(async (id: string) => {
-    setState(prev => {
-      const updated = prev.customTasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
-      return { ...prev, customTasks: updated };
-    });
-  }, []);
-
-  const deleteCustomTask = useCallback(async (id: string) => {
-    setState(prev => {
-      const updated = prev.customTasks.filter(t => t.id !== id);
-      safeSetItem(CUSTOM_TASKS_KEY, updated).catch(console.error);
-      return { ...prev, customTasks: updated };
-    });
-  }, []);
-
-  const reassignTaskDay = useCallback(async (taskId: string, newDay: string) => {
-    setState(prev => {
-      const updatedWeekly = prev.weeklyTasks.map(t => t.id === taskId ? { ...t, dayOfWeek: newDay } : t);
-      safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
-      return { ...prev, weeklyTasks: updatedWeekly };
-    });
-  }, []);
-
-  const postponeTaskToFriday = useCallback(async (taskId: string) => {
-    setState(prev => {
-      const updatedWeekly = prev.weeklyTasks.map(t => t.id === taskId ? { ...t, postponed: true } : t);
-      safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
-      return { ...prev, weeklyTasks: updatedWeekly };
-    });
-  }, []);
-
-  const toggleMonthlyTask = useCallback(async (id: string) => {
-    setState(prev => {
-      const updatedMonthly = prev.monthlyTasks.map(task =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      );
-      safeSetItem(MONTHLY_KEY, updatedMonthly).catch(console.error);
-      return { ...prev, monthlyTasks: updatedMonthly };
-    });
-  }, []);
-
-  const startChallenge = useCallback(async (challengeId: '7-day' | '28-day') => {
-    const activeChallenge = {
-      id: challengeId,
-      title: challengeId === '7-day' ? '7-Day Kick Start' : '28-Day Challenge',
-      durationDays: challengeId === '7-day' ? 7 : 28,
-      currentDay: 1,
-      status: 'active' as const,
-      tasks: challengeData(1)
-    };
-    await safeSetItem(CHALLENGES_KEY, activeChallenge);
-    setState(prev => ({ ...prev, activeChallenge }));
-  }, []);
-
-  const advanceChallengeDay = useCallback(async () => {
-    setState(prev => {
-      if (!prev.activeChallenge) return prev;
-      const isCompleted = prev.activeChallenge.currentDay >= prev.activeChallenge.durationDays;
-      const nextDay = isCompleted ? prev.activeChallenge.durationDays : prev.activeChallenge.currentDay + 1;
-      const updatedChallenge = {
-        ...prev.activeChallenge,
-        currentDay: nextDay,
-        status: isCompleted ? 'completed' as const : 'active' as const,
-        tasks: challengeData(nextDay)
-      };
-      safeSetItem(CHALLENGES_KEY, updatedChallenge).catch(console.error);
-      return { ...prev, activeChallenge: updatedChallenge };
-    });
-  }, []);
+  }, [fetchHousehold]);
 
   const setTimer = useCallback((duration: number) => {
     setState(prev => ({ ...prev, timerDuration: duration }));
@@ -379,119 +194,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const toggleTimerActive = useCallback(() => {
     setState(prev => ({ ...prev, timerActive: !prev.timerActive }));
-  }, []);
-
-  const toggleChallengeSubtask = useCallback(async (subtaskId: string) => {
-    setState(prev => {
-      if (!prev.activeChallenge || !prev.activeChallenge.tasks) return prev;
-      const updatedTasks = prev.activeChallenge.tasks.map(task => ({
-        ...task,
-        subtasks: task.subtasks.map(st => 
-          st.id === subtaskId ? { ...st, completed: !st.completed } : st
-        )
-      }));
-      const updatedChallenge = { ...prev.activeChallenge, tasks: updatedTasks };
-      safeSetItem(CHALLENGES_KEY, updatedChallenge).catch(console.error);
-      return { ...prev, activeChallenge: updatedChallenge };
-    });
-  }, []);
-
-  const addCustomGuide = useCallback(async (guide: Guide) => {
-    setState(prev => {
-      const updatedGuides = [...prev.customGuides, guide];
-      safeSetItem(CUSTOM_GUIDES_KEY, updatedGuides).catch(console.error);
-      return { ...prev, customGuides: updatedGuides };
-    });
-  }, []);
-
-  const addCustomRecipe = useCallback(async (recipe: Recipe) => {
-    setState(prev => {
-      const updatedRecipes = [...prev.customRecipes, recipe];
-      safeSetItem(CUSTOM_RECIPES_KEY, updatedRecipes).catch(console.error);
-      return { ...prev, customRecipes: updatedRecipes };
-    });
-  }, []);
-
-  const deleteCustomGuide = useCallback(async (id: string) => {
-    setState(prev => {
-      const updatedGuides = prev.customGuides.filter(g => g.id !== id);
-      safeSetItem(CUSTOM_GUIDES_KEY, updatedGuides).catch(console.error);
-      return { ...prev, customGuides: updatedGuides };
-    });
-  }, []);
-
-  const deleteCustomRecipe = useCallback(async (id: string) => {
-    setState(prev => {
-      const updatedRecipes = prev.customRecipes.filter(r => r.id !== id);
-      safeSetItem(CUSTOM_RECIPES_KEY, updatedRecipes).catch(console.error);
-      return { ...prev, customRecipes: updatedRecipes };
-    });
-  }, []);
-
-  const addCustomCategory = useCallback(async (category: string) => {
-    setState(prev => {
-      if (prev.customCategories.includes(category)) return prev;
-      const updatedCategories = [...prev.customCategories, category];
-      safeSetItem(CUSTOM_CATEGORIES_KEY, updatedCategories).catch(console.error);
-      return { ...prev, customCategories: updatedCategories };
-    });
-  }, []);
-
-  const deleteCustomCategory = useCallback(async (category: string) => {
-    setState(prev => {
-      const updatedCategories = prev.customCategories.filter(c => c !== category);
-      safeSetItem(CUSTOM_CATEGORIES_KEY, updatedCategories).catch(console.error);
-      return { ...prev, customCategories: updatedCategories };
-    });
-  }, []);
-
-  const updateWeeklySchedule = useCallback(async (updates: { id: string, title: string }[]) => {
-    setState(prev => {
-      let updatedWeekly = [...prev.weeklyTasks];
-      updates.forEach(update => {
-        updatedWeekly = updatedWeekly.map(t => t.id === update.id ? { ...t, title: update.title } : t);
-      });
-      safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
-      return { ...prev, weeklyTasks: updatedWeekly };
-    });
-  }, []);
-
-  const resetWeeklySchedule = useCallback(async () => {
-    setState(prev => {
-      const resetWeekly = prev.weeklyTasks.map(t => ({ ...t, completed: false, postponed: false }));
-      safeSetItem(WEEKLY_KEY, resetWeekly).catch(console.error);
-      return { ...prev, weeklyTasks: resetWeekly };
-    });
-  }, []);
-
-  const resetMonthlyTasks = useCallback(async () => {
-    setState(prev => {
-      const resetMonthly = prev.monthlyTasks.map(t => ({ ...t, completed: false }));
-      safeSetItem(MONTHLY_KEY, resetMonthly).catch(console.error);
-      return { ...prev, monthlyTasks: resetMonthly };
-    });
-  }, []);
-
-  const resetDailyTasks = useCallback(async () => {
-    setState(prev => {
-      const updatedDaily = prev.dailyTasks.map(t => ({ ...t, completed: false }));
-      safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
-      return { ...prev, dailyTasks: updatedDaily };
-    });
-  }, []);
-
-  const resetActiveChallenge = useCallback(async () => {
-    setState(prev => {
-      if (!prev.activeChallenge) return prev;
-      const resetChallenge = {
-        ...prev.activeChallenge,
-        currentDay: 1,
-        status: 'active' as const,
-        tasks: challengeData(1)
-      };
-      safeSetItem(CHALLENGES_KEY, resetChallenge).catch(console.error);
-      return { ...prev, activeChallenge: resetChallenge };
-    });
   }, []);
 
   const toggleNotifications = useCallback(async (enabled: boolean) => {
@@ -514,40 +216,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(JSON.parse(JSON.stringify(defaultState)));
   }, []);
 
-
   const contextValue = useMemo(() => ({
     state,
-    catchAllTasks,
-    addCustomTask,
-    toggleCustomTask,
-    deleteCustomTask,
-    toggleTask,
-    reassignTaskDay,
-    postponeTaskToFriday,
-    startChallenge,
-    advanceChallengeDay,
+    createHousehold,
+    joinHousehold,
     setTimer,
     toggleTimerActive,
-    toggleChallengeSubtask,
-    toggleMonthlyTask,
-    addCustomGuide,
-    addCustomRecipe,
-    deleteCustomGuide,
-    deleteCustomRecipe,
-    addCustomCategory,
-    deleteCustomCategory,
-    updateWeeklySchedule,
-    resetWeeklySchedule,
-    resetMonthlyTasks,
-    resetDailyTasks,
-    resetActiveChallenge,
     factoryReset,
     toggleNotifications,
     updateReminderTime,
     setLanguage,
     syncTasks,
+    ...taskActions,
+    ...guideAndRecipeActions,
+    ...challengeActions
   }), [
-    state, catchAllTasks, addCustomTask, toggleCustomTask, deleteCustomTask, toggleTask, reassignTaskDay, postponeTaskToFriday, startChallenge, advanceChallengeDay, setTimer, toggleTimerActive, toggleChallengeSubtask, toggleMonthlyTask, addCustomGuide, addCustomRecipe, deleteCustomGuide, deleteCustomRecipe, addCustomCategory, deleteCustomCategory, updateWeeklySchedule, resetWeeklySchedule, resetMonthlyTasks, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks
+    state,
+    createHousehold,
+    joinHousehold,
+    setTimer,
+    toggleTimerActive,
+    factoryReset,
+    toggleNotifications,
+    updateReminderTime,
+    setLanguage,
+    syncTasks,
+    taskActions,
+    guideAndRecipeActions,
+    challengeActions
   ]);
 
   return (

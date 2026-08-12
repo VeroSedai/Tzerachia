@@ -34,7 +34,43 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
     }
   };
 
-  const isCustom = item.id.startsWith('custom-');
+  const normalizedSteps = React.useMemo(() => {
+    const rawSteps = type === 'guide' ? ((item as Guide).steps || (item as any).content) : (item as any).steps;
+    if (!rawSteps) return [];
+    if (Array.isArray(rawSteps)) {
+      return rawSteps.map((s, idx) => {
+        if (typeof s === 'string') return { number: idx + 1, title: `Passaggio ${idx + 1}`, description: s };
+        return {
+          number: s.number || s.step || idx + 1,
+          title: s.title || `Passaggio ${idx + 1}`,
+          description: s.description || s.text || JSON.stringify(s)
+        };
+      });
+    }
+    if (typeof rawSteps === 'string') {
+      return (rawSteps as string).split('\n').filter(Boolean).map((line, idx) => ({
+        number: idx + 1,
+        title: `Passaggio ${idx + 1}`,
+        description: line
+      }));
+    }
+    return [];
+  }, [item, type]);
+
+  const normalizedIngredients = React.useMemo(() => {
+    if (type !== 'recipe') return [];
+    const rawIngredients = (item as Recipe).ingredients;
+    if (!rawIngredients) return [];
+    if (Array.isArray(rawIngredients)) {
+      return rawIngredients.map(i => typeof i === 'string' ? i : ((i as any).name || JSON.stringify(i)));
+    }
+    if (typeof rawIngredients === 'string') {
+      return (rawIngredients as string).split('\n').filter(Boolean);
+    }
+    return [];
+  }, [item, type]);
+
+  const isCustom = (item as any).isCustom || !!(item as any).created_by || !!(item as any).household_id || item.id.startsWith('custom-');
 
   const handleDelete = () => {
     const doDelete = () => {
@@ -95,7 +131,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ingredienti</Text>
             <View style={styles.card}>
-              {(item as Recipe).ingredients.map((ingredient, index) => (
+              {normalizedIngredients.map((ingredient, index) => (
                 <View key={index} style={styles.ingredientRow}>
                   <TaskItem 
                     title={ingredient} 
@@ -121,9 +157,9 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
 
             <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Procedura</Text>
             <View style={styles.card}>
-              {(item as Guide).steps.map((stepItem, index) => (
+              {normalizedSteps.map((stepItem, index) => (
                 <View key={index} style={styles.stepRow}>
-                  <Text style={styles.stepNumber}>{stepItem.step}.</Text>
+                  <Text style={styles.stepNumber}>{stepItem.number}.</Text>
                   <View style={{ flex: 1 }}>
                     <TaskItem 
                       title={stepItem.description} 

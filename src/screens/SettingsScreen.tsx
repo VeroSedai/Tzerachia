@@ -15,9 +15,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks } = useAppContext();
+  const { state, resetDailyTasks, resetActiveChallenge, factoryReset, toggleNotifications, updateReminderTime, setLanguage, syncTasks, createHousehold, joinHousehold } = useAppContext();
   
   const [timeInput, setTimeInput] = useState(state.reminderTime || '09:00');
+  
+  // Supabase Household State
+  const [inviteCodeInput, setInviteCodeInput] = useState('');
+  const [householdNameInput, setHouseholdNameInput] = useState('');
   
   // Sync Modal State
   const [syncModalVisible, setSyncModalVisible] = useState(false);
@@ -255,6 +259,54 @@ export default function SettingsScreen({ navigation }: Props) {
             <Text style={styles.settingDescription}>Elimina tutti i dati e riporta l'app a zero</Text>
           </View>
         </TouchableOpacity>
+
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>CASA CONDIVISA (CLOUD)</Text>
+
+        {state.household ? (
+          <View style={styles.settingItem}>
+            <View style={[styles.iconContainer, { backgroundColor: '#E0F4FF' }]}>
+              <Feather name="home" size={20} color="#0099FF" />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingTitle}>{state.household.name || 'La mia Casa'}</Text>
+              <Text style={styles.settingDescription}>Codice Invito: {state.household.invite_code}</Text>
+            </View>
+          </View>
+        ) : (
+          <>
+            <View style={styles.settingItem}>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Unisciti a una Casa</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={inviteCodeInput}
+                  onChangeText={setInviteCodeInput}
+                  placeholder="Codice Invito (6 lettere)"
+                  autoCapitalize="characters"
+                  maxLength={6}
+                />
+              </View>
+              <TouchableOpacity onPress={() => { if (inviteCodeInput.length === 6) joinHousehold(inviteCodeInput); }} style={[styles.actionButton, inviteCodeInput.length !== 6 && {opacity: 0.5}]}>
+                <Text style={styles.actionButtonText}>Unisciti</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingItem}>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Crea nuova Casa</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={householdNameInput}
+                  onChangeText={setHouseholdNameInput}
+                  placeholder="Nome (es. Casa Nostra)"
+                />
+              </View>
+              <TouchableOpacity onPress={() => createHousehold(householdNameInput)} style={styles.actionButton}>
+                <Text style={styles.actionButtonText}>Crea</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Sync Modal */}
@@ -364,4 +416,7 @@ const styles = StyleSheet.create({
   qrContainer: { padding: 24, backgroundColor: '#FFFFFF', borderRadius: 24, marginBottom: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   cancelScanButton: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: '#FFFFFF', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
   cancelScanText: { color: '#1A2F2F', fontSize: 16, fontWeight: 'bold' },
+  textInput: { backgroundColor: '#F0F4F4', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#1A2F2F', marginTop: 8 },
+  actionButton: { backgroundColor: '#00A3A1', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, marginLeft: 12 },
+  actionButtonText: { color: '#FFFFFF', fontWeight: 'bold' },
 });
