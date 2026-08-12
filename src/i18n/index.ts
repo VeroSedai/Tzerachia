@@ -68,7 +68,7 @@ export const dictionary = {
     recipes: 'Ricette',
     cleaning_guides: 'Guide Pulizia',
     my_guides: 'Le mie guide',
-    add_guide: 'Nuova Guida',
+    add_guide: 'Aggiungi',
   },
   en: {
     // Tabs
@@ -137,7 +137,7 @@ export const dictionary = {
     recipes: 'Recipes',
     cleaning_guides: 'Cleaning Guides',
     my_guides: 'My Guides',
-    add_guide: 'New Guide',
+    add_guide: 'Add',
   }
 };
 
