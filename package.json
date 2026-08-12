@@ -1,6 +1,6 @@
 {
-  "name": "tzerachìa",
-  "version": "1.0.0",
+  "name": "tzerachia",
+  "version": "1.0.2",
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.9",

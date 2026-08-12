@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Tzerachìa ",
+    "name": "Tzerachìa",
     "slug": "tzerachia",
     "scheme": "tzerachia",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,11 +16,24 @@
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Consenti a Tzerachia di usare la fotocamera per sincronizzare."
+        }
+      ],
+      "expo-notifications"
+    ],
     "extra": {
       "eas": {
         "projectId": "5d8f7bd2-e233-4165-b612-9c1aa02f36ce"
