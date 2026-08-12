@@ -4,12 +4,11 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 const isExpoGo = Constants.appOwnership === 'expo' || Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 let Notifications: typeof import('expo-notifications') | null = null;
-if (!isExpoGo) {
-  Notifications = require('expo-notifications');
-}
 
 try {
   if (!isExpoGo) {
+    Notifications = require('expo-notifications');
+    
     // Set the handler so notifications show up in foreground
     Notifications!.setNotificationHandler({
       handleNotification: async () => ({

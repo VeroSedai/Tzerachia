@@ -122,14 +122,20 @@ export const useHouseholdSync = (
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        supabase.auth.signInAnonymously();
-      } else {
-        setState(prev => ({ ...prev, session }));
-        fetchHousehold(session.user.id);
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          await supabase.auth.signInAnonymously();
+        } else {
+          setState(prev => ({ ...prev, session }));
+          fetchHousehold(session.user.id);
+        }
+      } catch (err) {
+        console.warn('Supabase auth bypass on boot:', err);
       }
-    });
+    };
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setState(prev => ({ ...prev, session }));
