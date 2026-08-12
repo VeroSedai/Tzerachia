@@ -44,14 +44,14 @@ export default function ChallengesScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.headerTitle}>Le Tue Sfide</Text>
         
-        {/* 7-Day Kick Start Card */}
+        {/* 7-Day Quick Start Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="flash" size={24} color="#7A9A8B" />
-            <Text style={styles.cardTitle}>7-Day Kick Start</Text>
+            <Text style={styles.cardTitle}>7-Day Quick Start</Text>
           </View>
           <Text style={styles.cardDescription}>
-            Una settimana intensiva per riportare la tua casa alla base della pulizia Simply Clean. Perfetta per iniziare!
+            Una settimana intensiva per riportare la tua casa alla base della pulizia Tzerachìa. Perfetta per iniziare!
           </Text>
           <Text style={styles.statusText}>{getChallengeStatusText('7-day')}</Text>
           
