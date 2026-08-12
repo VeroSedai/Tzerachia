@@ -1,18 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Task } from '../types';
 
-export const DAILY_KEY = '@simplyclean_daily';
-export const WEEKLY_KEY = '@simplyclean_weekly';
-export const MONTHLY_KEY = '@simplyclean_monthly';
-export const CHALLENGES_KEY = '@simplyclean_challenges';
-export const LAST_DATE_KEY = '@simplyclean_last_date';
-export const CUSTOM_GUIDES_KEY = '@simplyclean_custom_guides';
-export const CUSTOM_RECIPES_KEY = '@simplyclean_custom_recipes';
-export const CUSTOM_CATEGORIES_KEY = '@simplyclean_custom_categories';
-export const NOTIFICATIONS_ENABLED_KEY = '@simplyclean_notifications_enabled';
-export const REMINDER_TIME_KEY = '@simplyclean_reminder_time';
-export const LANGUAGE_KEY = '@simplyclean_language';
-export const CUSTOM_TASKS_KEY = '@simplyclean_custom_tasks';
+export const DAILY_KEY = '@tzerachia_daily';
+export const WEEKLY_KEY = '@tzerachia_weekly';
+export const MONTHLY_KEY = '@tzerachia_monthly';
+export const CHALLENGES_KEY = '@tzerachia_challenges';
+export const LAST_DATE_KEY = '@tzerachia_last_date';
+export const CUSTOM_GUIDES_KEY = '@tzerachia_custom_guides';
+export const CUSTOM_RECIPES_KEY = '@tzerachia_custom_recipes';
+export const CUSTOM_CATEGORIES_KEY = '@tzerachia_custom_categories';
+export const NOTIFICATIONS_ENABLED_KEY = '@tzerachia_notifications_enabled';
+export const REMINDER_TIME_KEY = '@tzerachia_reminder_time';
+export const LANGUAGE_KEY = '@tzerachia_language';
+export const CUSTOM_TASKS_KEY = '@tzerachia_custom_tasks';
 
 export const safeSetItem = async (key: string, value: any) => {
   try {

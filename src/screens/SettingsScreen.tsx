@@ -160,8 +160,8 @@ export default function SettingsScreen({ navigation }: Props) {
     setSyncModalVisible(false);
     
     // Check if it's our sync URL
-    if (data.startsWith('simplyclean://sync?data=')) {
-      const payload = data.split('simplyclean://sync?data=')[1];
+    if (data.startsWith('tzerachia://sync?data=')) {
+      const payload = data.split('tzerachia://sync?data=')[1];
       syncTasks(payload);
     } else {
       // Maybe it's just the payload
@@ -170,7 +170,7 @@ export default function SettingsScreen({ navigation }: Props) {
   };
 
   const syncPayload = exportAppStatePayload(state);
-  const syncUrl = `simplyclean://sync?data=${syncPayload}`;
+  const syncUrl = `tzerachia://sync?data=${syncPayload}`;
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
@@ -372,7 +372,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 <View style={styles.syncTabContent}>
                   <View style={styles.previewBox}>
                     <Text style={styles.previewText}>
-                      {state.language === 'it' ? '🧹 SimplyClean Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:\n\n' : '🧹 SimplyClean Sync\n\nI completed some chores! Click the link to sync our app:\n\n'}
+                      {state.language === 'it' ? '🧹 Tzerachìa Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:\n\n' : '🧹 Tzerachìa Sync\n\nI completed some chores! Click the link to sync our app:\n\n'}
                       <Text style={{ color: '#0099FF' }}>{syncUrl.substring(0, 40)}...</Text>
                     </Text>
                   </View>

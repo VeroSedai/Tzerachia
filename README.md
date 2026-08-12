@@ -1,6 +1,6 @@
 # Tzerachìa 🧹✨
 
-Tzerachìa is a beautiful mobile application designed to simplify and organize daily and weekly household chores, as well as intensive cleaning challenges, inspired by the famous Clean Mama method. Built with React Native and Expo, it offers a modern, smooth, and minimalist user experience in iOS style.
+Tzerachìa is a beautiful mobile application designed to simplify and organize daily and weekly household chores, as well as intensive cleaning challenges. Built with React Native and Expo, it offers a modern, smooth, and minimalist user experience in iOS style.
 
 ## Key Features
 
@@ -160,7 +160,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.custom_recipes;
 A quick overview of the project's organization to help you navigate the codebase:
 
 ```text
-SimplyClean/
+Tzerachìa/
 ├── assets/             # App icons, splash screens, and static images
 ├── src/
 │   ├── components/     # Reusable UI components
@@ -195,4 +195,9 @@ When contributing, please ensure your code follows the existing style and passes
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+## ℹ️ Disclaimer & Credits
+This application is an independent, non-official personal project developed for home organization and household task management. All original code, UI design, and features are open-source. Any inspiration drawn from popular home cleaning methodologies is used abstractly, and all trademarks belong to their respective owners.
 

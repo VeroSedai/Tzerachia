@@ -137,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const handleUrl = (event: Linking.EventType) => {
       const parsed = Linking.parse(event.url);
-      if (parsed.scheme === 'simplyclean' && parsed.path === 'sync' && parsed.queryParams?.data) {
+      if (parsed.scheme === 'tzerachia' && parsed.path === 'sync' && parsed.queryParams?.data) {
         const payloadStr = Array.isArray(parsed.queryParams.data) ? parsed.queryParams.data[0] : parsed.queryParams.data;
         syncTasks(payloadStr);
       }

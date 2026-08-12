@@ -10,7 +10,7 @@ export const useChallenges = (
   const startChallenge = useCallback(async (challengeId: '7-day' | '28-day') => {
     const activeChallenge = {
       id: challengeId,
-      title: challengeId === '7-day' ? '7-Day Kick Start' : '28-Day Challenge',
+      title: challengeId === '7-day' ? '7-Day Quick Start' : '28-Day Challenge',
       durationDays: challengeId === '7-day' ? 7 : 28,
       currentDay: 1,
       status: 'active' as const,
