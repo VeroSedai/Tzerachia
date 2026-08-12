@@ -1,9 +1,9 @@
 {
   "expo": {
     "name": "Tzerachìa ",
-    "slug": "Tzerachìa",
+    "slug": "tzerachia",
     "scheme": "tzerachia",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,16 +11,20 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.tzerachia.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5d8f7bd2-e233-4165-b612-9c1aa02f36ce"
+      }
     }
   }
 }
