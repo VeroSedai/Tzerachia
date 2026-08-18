@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Task } from '../types';
-import { getTodayStr, isSameWeek, isSameMonth } from '../utils/dateUtils';
+import { getTodayStr, isSameWeek, isSameMonth, pruneOldCompletions } from '../utils/dateUtils';
 
 export const DAILY_KEY = '@tzerachia_daily';
 export const WEEKLY_KEY = '@tzerachia_weekly';
@@ -14,6 +14,7 @@ export const NOTIFICATIONS_ENABLED_KEY = '@tzerachia_notifications_enabled';
 export const REMINDER_TIME_KEY = '@tzerachia_reminder_time';
 export const LANGUAGE_KEY = '@tzerachia_language';
 export const CUSTOM_TASKS_KEY = '@tzerachia_custom_tasks';
+export const DAILY_COMPLETIONS_BY_DATE_KEY = '@tzerachia_daily_completions_by_date';
 
 export const safeSetItem = async (key: string, value: any) => {
   try {
@@ -46,7 +47,7 @@ export const loadInitialState = async (
   defaultState: AppState
 ) => {
   try {
-    const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr, customTasksStr] = await Promise.all([
+    const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr, customTasksStr, dailyByDateStr] = await Promise.all([
       AsyncStorage.getItem(DAILY_KEY),
       AsyncStorage.getItem(WEEKLY_KEY),
       AsyncStorage.getItem(MONTHLY_KEY),
@@ -58,7 +59,8 @@ export const loadInitialState = async (
       AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
       AsyncStorage.getItem(REMINDER_TIME_KEY),
       AsyncStorage.getItem(LANGUAGE_KEY),
-      AsyncStorage.getItem(CUSTOM_TASKS_KEY)
+      AsyncStorage.getItem(CUSTOM_TASKS_KEY),
+      AsyncStorage.getItem(DAILY_COMPLETIONS_BY_DATE_KEY)
     ]);
 
     const safeParse = (str: string | null, fallback: any) => {
@@ -83,6 +85,11 @@ export const loadInitialState = async (
     const notificationsEnabled = safeParse(notifEnabledStr, defaultState.notificationsEnabled);
     const reminderTime = safeParse(reminderTimeStr, defaultState.reminderTime);
     const language = languageStr === 'en' || languageStr === 'it' ? languageStr : defaultState.language;
+    let dailyTasksCompletionsByDate = safeParse(dailyByDateStr, defaultState.dailyTasksCompletionsByDate || {});
+
+    // Prune old completions (> 30 days) to manage local storage memory
+    dailyTasksCompletionsByDate = pruneOldCompletions(dailyTasksCompletionsByDate, 30);
+    safeSetItem(DAILY_COMPLETIONS_BY_DATE_KEY, dailyTasksCompletionsByDate).catch(console.error);
     
     // Auto Reset Logic
     if (lastDateStr !== today) {
@@ -110,7 +117,9 @@ export const loadInitialState = async (
       session: null,
       household: null,
       lastResetDate: today,
+      selectedDate: today,
       dailyTasks,
+      dailyTasksCompletionsByDate,
       customTasks,
       weeklyTasks,
       monthlyTasks,

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { AppState, CustomTask } from '../types';
 import { supabase } from '../lib/supabase';
-import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr } from '../utils/dateUtils';
+import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr, pruneOldCompletions } from '../utils/dateUtils';
+import { safeSetItem, DAILY_COMPLETIONS_BY_DATE_KEY } from '../services/storageService';
 
 let activeSubscriptionChannel: any = null;
-let activeSubscriptionHouseholdId: string | null = null;
 
 export const useHouseholdSync = (
   setState: React.Dispatch<React.SetStateAction<AppState>>
@@ -14,8 +14,13 @@ export const useHouseholdSync = (
     const startOfWeek = getStartOfWeekStr();
     const startOfMonth = getStartOfMonthStr();
 
+    // Fetch completions from 30 days ago to cover 15-day history navigation
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
     const [completionsRes, customTasksRes, customGuidesRes, customRecipesRes] = await Promise.all([
-      supabase.from('task_completions').select('*').eq('household_id', householdId).gte('completed_at', startOfMonth),
+      supabase.from('task_completions').select('*').eq('household_id', householdId).gte('completed_at', thirtyDaysAgoStr),
       supabase.from('custom_tasks').select('*').eq('household_id', householdId),
       supabase.from('custom_guides').select('*').eq('household_id', householdId),
       supabase.from('custom_recipes').select('*').eq('household_id', householdId)
@@ -36,11 +41,31 @@ export const useHouseholdSync = (
         .filter((c: any) => c.completed_at >= startOfMonth)
         .map((c: any) => c.task_id);
 
+      const completionsByDate: Record<string, string[]> = {};
+      completions.forEach((c: any) => {
+        if (!c.completed_at || !c.task_id) return;
+        if (!completionsByDate[c.completed_at]) {
+          completionsByDate[c.completed_at] = [];
+        }
+        if (!completionsByDate[c.completed_at].includes(c.task_id)) {
+          completionsByDate[c.completed_at].push(c.task_id);
+        }
+      });
+
+      const prunedCompletionsByDate = pruneOldCompletions(completionsByDate, 30);
+      safeSetItem(DAILY_COMPLETIONS_BY_DATE_KEY, prunedCompletionsByDate).catch(console.error);
+
       setState(prev => {
          const updatedDaily = prev.dailyTasks.map(t => ({ ...t, completed: todayCompletedIds.includes(t.id) }));
          const updatedWeekly = prev.weeklyTasks.map(t => ({ ...t, completed: weekCompletedIds.includes(t.id) }));
          const updatedMonthly = prev.monthlyTasks.map(t => ({ ...t, completed: monthCompletedIds.includes(t.id) }));
-         return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
+         return { 
+           ...prev, 
+           dailyTasks: updatedDaily, 
+           weeklyTasks: updatedWeekly, 
+           monthlyTasks: updatedMonthly,
+           dailyTasksCompletionsByDate: prunedCompletionsByDate
+         };
       });
     }
     
@@ -69,7 +94,6 @@ export const useHouseholdSync = (
       activeSubscriptionChannel = null;
     }
     
-    // Use a unique channel name (append timestamp) to avoid collisions if removeChannel hasn't finished asynchronously
     const uniqueChannelName = `household_${householdId}_${Date.now()}`;
     
     activeSubscriptionChannel = supabase.channel(uniqueChannelName)
@@ -79,6 +103,7 @@ export const useHouseholdSync = (
         const taskId = newPayload?.task_id || oldPayload?.task_id;
         const completedAt = newPayload?.completed_at || oldPayload?.completed_at;
         const isCompleted = payload.eventType === 'INSERT' || payload.eventType === 'UPDATE';
+        
         if (taskId) {
            const today = getTodayStr();
            const startOfWeek = getStartOfWeekStr();
@@ -92,12 +117,23 @@ export const useHouseholdSync = (
              let updatedDaily = prev.dailyTasks;
              let updatedWeekly = prev.weeklyTasks;
              let updatedMonthly = prev.monthlyTasks;
+             let updatedCompletionsByDate = { ...(prev.dailyTasksCompletionsByDate || {}) };
 
-             if (isDailyTarget) {
-               if (!completedAt || completedAt === today) {
+             if (isDailyTarget && completedAt) {
+               const dateCompletions = updatedCompletionsByDate[completedAt] || [];
+               if (isCompleted) {
+                 updatedCompletionsByDate[completedAt] = [...dateCompletions.filter(id => id !== taskId), taskId];
+               } else {
+                 updatedCompletionsByDate[completedAt] = dateCompletions.filter(id => id !== taskId);
+               }
+               updatedCompletionsByDate = pruneOldCompletions(updatedCompletionsByDate, 30);
+               safeSetItem(DAILY_COMPLETIONS_BY_DATE_KEY, updatedCompletionsByDate).catch(console.error);
+
+               if (completedAt === today) {
                  updatedDaily = prev.dailyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
                }
              }
+
              if (isWeeklyTarget) {
                if (!completedAt || completedAt >= startOfWeek) {
                  updatedWeekly = prev.weeklyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
@@ -109,7 +145,13 @@ export const useHouseholdSync = (
                }
              }
 
-             return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
+             return { 
+               ...prev, 
+               dailyTasks: updatedDaily, 
+               weeklyTasks: updatedWeekly, 
+               monthlyTasks: updatedMonthly,
+               dailyTasksCompletionsByDate: updatedCompletionsByDate
+             };
            });
         }
       })
@@ -151,7 +193,7 @@ export const useHouseholdSync = (
   };
 
   const fetchHousehold = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('household_members')
       .select('household_id, households(id, name, invite_code)')
       .eq('user_id', userId)

@@ -2,21 +2,27 @@ import { useCallback, useMemo } from 'react';
 import { AppState, CustomTask } from '../types';
 import { generateUUID } from '../utils/uuid';
 import { supabase } from '../lib/supabase';
-import { safeSetItem, DAILY_KEY, WEEKLY_KEY, MONTHLY_KEY, CUSTOM_TASKS_KEY } from '../services/storageService';
-import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr } from '../utils/dateUtils';
+import { safeSetItem, DAILY_KEY, WEEKLY_KEY, MONTHLY_KEY, CUSTOM_TASKS_KEY, DAILY_COMPLETIONS_BY_DATE_KEY } from '../services/storageService';
+import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr, pruneOldCompletions } from '../utils/dateUtils';
 
 export const useTasks = (
   state: AppState,
   setState: React.Dispatch<React.SetStateAction<AppState>>
 ) => {
 
-  const pushTaskCompletion = async (householdId: string, userId: string, taskId: string, completed: boolean, taskType: 'daily' | 'weekly' | 'monthly') => {
-    const today = getTodayStr();
+  const pushTaskCompletion = async (
+    householdId: string, 
+    userId: string, 
+    taskId: string, 
+    completed: boolean, 
+    taskType: 'daily' | 'weekly' | 'monthly',
+    targetDate: string = getTodayStr()
+  ) => {
     if (completed) {
       await supabase.from('task_completions').upsert({
         household_id: householdId,
         task_id: taskId,
-        completed_at: today,
+        completed_at: targetDate,
         completed_by: userId
       });
     } else {
@@ -25,7 +31,7 @@ export const useTasks = (
           .delete()
           .eq('household_id', householdId)
           .eq('task_id', taskId)
-          .eq('completed_at', today);
+          .eq('completed_at', targetDate);
       } else if (taskType === 'weekly') {
         const startOfWeek = getStartOfWeekStr();
         await supabase.from('task_completions')
@@ -65,18 +71,30 @@ export const useTasks = (
     setState(prev => {
       let updatedDaily = [...prev.dailyTasks];
       let updatedWeekly = [...prev.weeklyTasks];
+      let updatedCompletionsByDate = { ...(prev.dailyTasksCompletionsByDate || {}) };
       let newCompleted = false;
       let taskType: 'daily' | 'weekly' = 'daily';
+      const targetDate = prev.selectedDate || getTodayStr();
+
       if (updatedDaily.some(t => t.id === taskId)) {
         taskType = 'daily';
-        updatedDaily = updatedDaily.map(t => {
-          if (t.id === taskId) {
-            newCompleted = !t.completed;
-            return { ...t, completed: newCompleted };
-          }
-          return t;
-        });
-        safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
+        const currentCompletedIds = updatedCompletionsByDate[targetDate] || [];
+        const isCurrentlyCompleted = currentCompletedIds.includes(taskId);
+        newCompleted = !isCurrentlyCompleted;
+
+        if (newCompleted) {
+          updatedCompletionsByDate[targetDate] = [...currentCompletedIds.filter(id => id !== taskId), taskId];
+        } else {
+          updatedCompletionsByDate[targetDate] = currentCompletedIds.filter(id => id !== taskId);
+        }
+
+        updatedCompletionsByDate = pruneOldCompletions(updatedCompletionsByDate, 30);
+        safeSetItem(DAILY_COMPLETIONS_BY_DATE_KEY, updatedCompletionsByDate).catch(console.error);
+
+        if (targetDate === getTodayStr()) {
+          updatedDaily = updatedDaily.map(t => t.id === taskId ? { ...t, completed: newCompleted } : t);
+          safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
+        }
       } else {
         taskType = 'weekly';
         updatedWeekly = updatedWeekly.map(t => {
@@ -90,10 +108,15 @@ export const useTasks = (
       }
       
       if (prev.household && prev.session) {
-        pushTaskCompletion(prev.household.id, prev.session.user.id, taskId, newCompleted, taskType).catch(console.error);
+        pushTaskCompletion(prev.household.id, prev.session.user.id, taskId, newCompleted, taskType, targetDate).catch(console.error);
       }
       
-      return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly };
+      return { 
+        ...prev, 
+        dailyTasks: updatedDaily, 
+        weeklyTasks: updatedWeekly,
+        dailyTasksCompletionsByDate: updatedCompletionsByDate
+      };
     });
   }, []);
 

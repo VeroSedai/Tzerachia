@@ -55,12 +55,14 @@ interface AppContextProps {
   toggleNotifications: (enabled: boolean) => void;
   updateReminderTime: (time: string) => void;
   setLanguage: (lang: 'it' | 'en') => void;
+  setSelectedDate: (date: string) => void;
 }
 
 const defaultState: AppState = {
   session: null,
   household: null,
   lastResetDate: new Date().toISOString().split('T')[0],
+  selectedDate: new Date().toISOString().split('T')[0],
   dailyTasks: [
     { id: 'daily-1', title: 'Rifare i letti', completed: false, type: 'daily' },
     { id: 'daily-2', title: 'Controllare i pavimenti', completed: false, type: 'daily' },
@@ -68,6 +70,7 @@ const defaultState: AppState = {
     { id: 'daily-4', title: 'Riordinare', completed: false, type: 'daily' },
     { id: 'daily-5', title: 'Fare il bucato', completed: false, type: 'daily' }
   ],
+  dailyTasksCompletionsByDate: {},
   customTasks: [],
   weeklyTasks: [
     { id: 'weekly-1', title: 'Pulizia bagni', completed: false, type: 'weekly', dayOfWeek: 'Lunedì' },
@@ -230,6 +233,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(prev => ({ ...prev, language: lang }));
   }, []);
 
+  const setSelectedDate = useCallback((date: string) => {
+    setState(prev => ({ ...prev, selectedDate: date }));
+  }, []);
+
   const factoryReset = useCallback(async () => {
     await safeClear();
     setState(JSON.parse(JSON.stringify(defaultState)));
@@ -246,6 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     toggleNotifications,
     updateReminderTime,
     setLanguage,
+    setSelectedDate,
     syncTasks,
     ...taskActions,
     ...guideAndRecipeActions,
@@ -261,6 +269,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     toggleNotifications,
     updateReminderTime,
     setLanguage,
+    setSelectedDate,
     syncTasks,
     taskActions,
     guideAndRecipeActions,

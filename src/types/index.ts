@@ -76,7 +76,9 @@ export interface AppState {
   session: Session | null;
   household: Household | null;
   lastResetDate: string; // YYYY-MM-DD
+  selectedDate: string; // YYYY-MM-DD for 15-day history navigation
   dailyTasks: Task[];
+  dailyTasksCompletionsByDate: Record<string, string[]>; // dateStr -> array of completed daily task IDs
   customTasks: CustomTask[];
   weeklyTasks: Task[];
   monthlyTasks: Task[];
