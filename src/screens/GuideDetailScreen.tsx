@@ -71,6 +71,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
   }, [item, type]);
 
   const isCustom = (item as any).isCustom || !!(item as any).created_by || !!(item as any).household_id || item.id.startsWith('custom-');
+  const guideDuration = type === 'guide' ? (item as Guide).duration : undefined;
 
   const handleDelete = () => {
     const doDelete = () => {
@@ -80,7 +81,6 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
         deleteCustomRecipe(item.id);
       }
 
-      // Check if we need to clean up a custom category
       if (item.category && state.customCategories.includes(item.category)) {
         const remainingGuides = state.customGuides.filter(g => g.id !== item.id && g.category === item.category);
         const remainingRecipes = state.customRecipes.filter(r => r.id !== item.id && r.category === item.category);
@@ -111,12 +111,12 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Custom Header to go back */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2C3E35" />
+          <Ionicons name="arrow-back" size={22} color="#1A2F2F" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{item.title}</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{item.title}</Text>
         {isCustom ? (
           <TouchableOpacity onPress={handleDelete} style={styles.backButton}>
             <Feather name="trash-2" size={20} color="#FF6B6B" />
@@ -132,7 +132,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
             <Text style={styles.sectionTitle}>Ingredienti</Text>
             <View style={styles.card}>
               {normalizedIngredients.map((ingredient, index) => (
-                <View key={index} style={styles.ingredientRow}>
+                <View key={index} style={[styles.ingredientRow, index === normalizedIngredients.length - 1 && { borderBottomWidth: 0 }]}>
                   <TaskItem 
                     title={ingredient} 
                     completed={!!checkedItems[`ingredient-${index}`]} 
@@ -147,28 +147,45 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
         {type === 'guide' && (
           <View style={styles.section}>
             {!sessionActive ? (
-              <TouchableOpacity style={styles.startButton} onPress={startSession}>
-                <Ionicons name="play" size={20} color="#ffffff" style={{ marginRight: 8 }} />
-                <Text style={styles.startButtonText}>Start Guided Session</Text>
+              <TouchableOpacity style={styles.startButton} onPress={startSession} activeOpacity={0.85}>
+                <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 8 }} />
+                <Text style={styles.startButtonText}>Avvia sessione guidata</Text>
+                {guideDuration && (
+                  <View style={styles.durationBadge}>
+                    <Ionicons name="time-outline" size={12} color="#00A3A1" />
+                    <Text style={styles.durationBadgeText}>{guideDuration}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             ) : (
               <TimerWidget />
             )}
 
-            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Procedura</Text>
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Procedura</Text>
             <View style={styles.card}>
-              {normalizedSteps.map((stepItem, index) => (
-                <View key={index} style={styles.stepRow}>
-                  <Text style={styles.stepNumber}>{stepItem.number}.</Text>
-                  <View style={{ flex: 1 }}>
-                    <TaskItem 
-                      title={stepItem.description} 
-                      completed={!!checkedItems[`step-${index}`]} 
-                      onToggle={() => handleToggle(`step-${index}`)} 
-                    />
-                  </View>
-                </View>
-              ))}
+              {normalizedSteps.map((stepItem, index) => {
+                const isCompleted = !!checkedItems[`step-${index}`];
+                const isLast = index === normalizedSteps.length - 1;
+                return (
+                  <TouchableOpacity 
+                    key={index} 
+                    style={[styles.stepRow, isLast && { borderBottomWidth: 0 }]}
+                    onPress={() => handleToggle(`step-${index}`)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.stepBadge, isCompleted && styles.stepBadgeCompleted]}>
+                      {isCompleted ? (
+                        <Feather name="check" size={14} color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.stepBadgeText}>{stepItem.number}</Text>
+                      )}
+                    </View>
+                    <Text style={[styles.stepDescription, isCompleted && styles.stepDescriptionCompleted]}>
+                      {stepItem.description}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         )}
@@ -180,28 +197,32 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9F9F6',
+    backgroundColor: '#F6F9F9',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#E0EAE9',
   },
   backButton: {
-    padding: 5,
+    padding: 6,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
-    color: '#2C3E35',
+    color: '#1A2F2F',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 8,
   },
   container: {
     padding: 20,
+    paddingBottom: 40,
   },
   section: {
     marginBottom: 20,
@@ -209,53 +230,95 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2C3E35',
-    marginBottom: 10,
+    color: '#1A2F2F',
+    marginBottom: 12,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 15,
-    shadowColor: '#2C3E35',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#D0E3E3',
+    elevation: 2,
+    shadowColor: '#00A3A1',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowRadius: 6,
   },
   ingredientRow: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F0F4F4',
+    paddingVertical: 4,
   },
   stepRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    paddingVertical: 5,
+    borderBottomColor: '#F0F4F4',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
   },
-  stepNumber: {
-    fontSize: 16,
+  stepBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#00A3A1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  stepBadgeCompleted: {
+    backgroundColor: '#8A9A9A',
+  },
+  stepBadgeText: {
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#7A9A8B',
-    marginRight: 10,
-    marginTop: 12, // Align with TaskItem text
+    color: '#FFFFFF',
+  },
+  stepDescription: {
+    fontSize: 15,
+    color: '#1A2F2F',
+    fontWeight: '500',
+    flex: 1,
+    lineHeight: 22,
+  },
+  stepDescriptionCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#8A9A9A',
   },
   startButton: {
-    backgroundColor: '#7A9A8B', // Soft Sage Green
-    paddingVertical: 15,
-    borderRadius: 12,
+    backgroundColor: '#00A3A1',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#7A9A8B',
+    shadowColor: '#00A3A1',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   startButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  durationBadge: {
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 12,
+  },
+  durationBadgeText: {
+    color: '#00A3A1',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
 });
