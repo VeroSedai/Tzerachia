@@ -26,6 +26,7 @@ export default function TodayScreen({ navigation }: Props) {
   
   const [newCustomTask, setNewCustomTask] = useState('');
   const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [showHistoryPicker, setShowHistoryPicker] = useState(false);
 
   const todayStr = getTodayStr();
   const selectedDate = state.selectedDate || todayStr;
@@ -67,40 +68,56 @@ export default function TodayScreen({ navigation }: Props) {
             </View>
             <Text style={styles.appName}>Tzerachìa</Text>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-            <Ionicons name="settings-outline" size={24} color="#666" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity 
+              onPress={() => setShowHistoryPicker(prev => !prev)}
+              style={[styles.headerIconBtn, (showHistoryPicker || !isTodaySelected) && styles.headerIconBtnActive]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={18} color={(showHistoryPicker || !isTodaySelected) ? '#FFFFFF' : '#5A6B6B'} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.headerIconBtn}>
+              <Ionicons name="settings-outline" size={20} color="#5A6B6B" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* 15-Day Date Selector Bar */}
-        <View style={styles.datePickerContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.datePickerScroll}
-          >
-            {past15Days.map(dateStr => {
-              const isSelected = dateStr === selectedDate;
-              const formatted = formatDateForPicker(dateStr, state.language);
+        {/* Date / History Header */}
+        {!showHistoryPicker && isTodaySelected && (
+          <Text style={styles.dateText}>{dateString}</Text>
+        )}
 
-              return (
-                <TouchableOpacity
-                  key={dateStr}
-                  style={[styles.datePill, isSelected && styles.datePillActive]}
-                  onPress={() => setSelectedDate(dateStr)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.datePillLabel, isSelected && styles.datePillLabelActive]}>
-                    {formatted.label}
-                  </Text>
-                  <Text style={[styles.datePillSublabel, isSelected && styles.datePillSublabelActive]}>
-                    {formatted.sublabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        {/* 15-Day Date Selector Bar (shown when history button toggled or when browsing past dates) */}
+        {(showHistoryPicker || !isTodaySelected) && (
+          <View style={styles.datePickerContainer}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.datePickerScroll}
+            >
+              {past15Days.map(dateStr => {
+                const isSelected = dateStr === selectedDate;
+                const formatted = formatDateForPicker(dateStr, state.language);
+
+                return (
+                  <TouchableOpacity
+                    key={dateStr}
+                    style={[styles.datePill, isSelected && styles.datePillActive]}
+                    onPress={() => setSelectedDate(dateStr)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.datePillLabel, isSelected && styles.datePillLabelActive]}>
+                      {formatted.label}
+                    </Text>
+                    <Text style={[styles.datePillSublabel, isSelected && styles.datePillSublabelActive]}>
+                      {formatted.sublabel}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Selected Date Header Banner if historical */}
         {!isTodaySelected && (
@@ -110,15 +127,13 @@ export default function TodayScreen({ navigation }: Props) {
           >
             <Ionicons name="time-outline" size={16} color="#00A3A1" />
             <Text style={styles.historyBannerText}>
-              {state.language === 'it' ? 'Storico del ' : 'History: '} {dateString}
+              {state.language === 'it' ? 'Storico: ' : 'History: '} {dateString}
             </Text>
             <View style={styles.historyReturnBtn}>
               <Text style={styles.historyReturnText}>{state.language === 'it' ? 'Torna a Oggi' : 'Back to Today'}</Text>
             </View>
           </TouchableOpacity>
         )}
-
-        {isTodaySelected && <Text style={styles.dateText}>{dateString}</Text>}
 
         {isTodaySelected && <TimerWidget />}
 
@@ -316,6 +331,20 @@ const styles = StyleSheet.create({
   datePickerContainer: {
     marginBottom: 16,
     marginHorizontal: -20,
+  },
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0E3E3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerIconBtnActive: {
+    backgroundColor: '#00A3A1',
+    borderColor: '#00A3A1',
   },
   datePickerScroll: {
     paddingHorizontal: 20,
