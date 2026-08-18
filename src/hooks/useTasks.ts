@@ -3,25 +3,49 @@ import { AppState, CustomTask } from '../types';
 import { generateUUID } from '../utils/uuid';
 import { supabase } from '../lib/supabase';
 import { safeSetItem, DAILY_KEY, WEEKLY_KEY, MONTHLY_KEY, CUSTOM_TASKS_KEY } from '../services/storageService';
+import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr } from '../utils/dateUtils';
 
 export const useTasks = (
   state: AppState,
   setState: React.Dispatch<React.SetStateAction<AppState>>
 ) => {
 
-  const pushTaskCompletion = async (householdId: string, userId: string, taskId: string, completed: boolean) => {
+  const pushTaskCompletion = async (householdId: string, userId: string, taskId: string, completed: boolean, taskType: 'daily' | 'weekly' | 'monthly') => {
+    const today = getTodayStr();
     if (completed) {
       await supabase.from('task_completions').upsert({
         household_id: householdId,
         task_id: taskId,
-        completed_at: new Date().toISOString().split('T')[0],
+        completed_at: today,
         completed_by: userId
       });
     } else {
-      await supabase.from('task_completions')
-        .delete()
-        .eq('household_id', householdId)
-        .eq('task_id', taskId);
+      if (taskType === 'daily') {
+        await supabase.from('task_completions')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('task_id', taskId)
+          .eq('completed_at', today);
+      } else if (taskType === 'weekly') {
+        const startOfWeek = getStartOfWeekStr();
+        await supabase.from('task_completions')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('task_id', taskId)
+          .gte('completed_at', startOfWeek);
+      } else if (taskType === 'monthly') {
+        const startOfMonth = getStartOfMonthStr();
+        await supabase.from('task_completions')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('task_id', taskId)
+          .gte('completed_at', startOfMonth);
+      } else {
+        await supabase.from('task_completions')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('task_id', taskId);
+      }
     }
   };
 
@@ -42,7 +66,9 @@ export const useTasks = (
       let updatedDaily = [...prev.dailyTasks];
       let updatedWeekly = [...prev.weeklyTasks];
       let newCompleted = false;
+      let taskType: 'daily' | 'weekly' = 'daily';
       if (updatedDaily.some(t => t.id === taskId)) {
+        taskType = 'daily';
         updatedDaily = updatedDaily.map(t => {
           if (t.id === taskId) {
             newCompleted = !t.completed;
@@ -52,6 +78,7 @@ export const useTasks = (
         });
         safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
       } else {
+        taskType = 'weekly';
         updatedWeekly = updatedWeekly.map(t => {
           if (t.id === taskId) {
             newCompleted = !t.completed;
@@ -63,7 +90,7 @@ export const useTasks = (
       }
       
       if (prev.household && prev.session) {
-        pushTaskCompletion(prev.household.id, prev.session.user.id, taskId, newCompleted).catch(console.error);
+        pushTaskCompletion(prev.household.id, prev.session.user.id, taskId, newCompleted, taskType).catch(console.error);
       }
       
       return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly };
@@ -162,7 +189,7 @@ export const useTasks = (
       });
       
       if (prev.household && prev.session) {
-        pushTaskCompletion(prev.household.id, prev.session.user.id, id, newCompleted).catch(console.error);
+        pushTaskCompletion(prev.household.id, prev.session.user.id, id, newCompleted, 'monthly').catch(console.error);
       }
 
       safeSetItem(MONTHLY_KEY, updatedMonthly).catch(console.error);
@@ -188,11 +215,13 @@ export const useTasks = (
       
       if (prev.household) {
         const weeklyIds = prev.weeklyTasks.map(t => t.id);
+        const startOfWeek = getStartOfWeekStr();
         supabase
           .from('task_completions')
           .delete()
           .eq('household_id', prev.household.id)
           .in('task_id', weeklyIds)
+          .gte('completed_at', startOfWeek)
           .then(({ error }) => {
             if (error) console.error('Error resetting weekly tasks on Supabase:', error);
           });
@@ -209,11 +238,13 @@ export const useTasks = (
       
       if (prev.household) {
         const monthlyIds = prev.monthlyTasks.map(t => t.id);
+        const startOfMonth = getStartOfMonthStr();
         supabase
           .from('task_completions')
           .delete()
           .eq('household_id', prev.household.id)
           .in('task_id', monthlyIds)
+          .gte('completed_at', startOfMonth)
           .then(({ error }) => {
             if (error) console.error('Error resetting monthly tasks on Supabase:', error);
           });
@@ -230,11 +261,13 @@ export const useTasks = (
       
       if (prev.household) {
         const dailyIds = prev.dailyTasks.map(t => t.id);
+        const today = getTodayStr();
         supabase
           .from('task_completions')
           .delete()
           .eq('household_id', prev.household.id)
           .in('task_id', dailyIds)
+          .eq('completed_at', today)
           .then(({ error }) => {
             if (error) console.error('Error resetting daily tasks on Supabase:', error);
           });

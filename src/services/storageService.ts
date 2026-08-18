@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Task } from '../types';
+import { getTodayStr, isSameWeek, isSameMonth } from '../utils/dateUtils';
 
 export const DAILY_KEY = '@tzerachia_daily';
 export const WEEKLY_KEY = '@tzerachia_weekly';
@@ -70,11 +71,11 @@ export const loadInitialState = async (
       }
     };
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayStr();
     let dailyTasks = safeParse(dailyStr, defaultState.dailyTasks);
     let customTasks = safeParse(customTasksStr, defaultState.customTasks);
-    const weeklyTasks = safeParse(weeklyStr, defaultState.weeklyTasks);
-    const monthlyTasks = safeParse(monthlyStr, defaultState.monthlyTasks);
+    let weeklyTasks = safeParse(weeklyStr, defaultState.weeklyTasks);
+    let monthlyTasks = safeParse(monthlyStr, defaultState.monthlyTasks);
     const activeChallenge = safeParse(challengesStr, defaultState.activeChallenge);
     const customGuides = safeParse(customGuidesStr, defaultState.customGuides);
     const customRecipes = safeParse(customRecipesStr, defaultState.customRecipes);
@@ -86,9 +87,20 @@ export const loadInitialState = async (
     // Auto Reset Logic
     if (lastDateStr !== today) {
       dailyTasks = dailyTasks.map((t: Task) => ({ ...t, completed: false }));
+      
+      if (!lastDateStr || !isSameWeek(lastDateStr, today)) {
+        weeklyTasks = weeklyTasks.map((t: Task) => ({ ...t, completed: false, postponed: false }));
+      }
+      
+      if (!lastDateStr || !isSameMonth(lastDateStr, today)) {
+        monthlyTasks = monthlyTasks.map((t: Task) => ({ ...t, completed: false }));
+      }
+
       try {
         await safeSetItem(LAST_DATE_KEY, today);
         await safeSetItem(DAILY_KEY, dailyTasks);
+        await safeSetItem(WEEKLY_KEY, weeklyTasks);
+        await safeSetItem(MONTHLY_KEY, monthlyTasks);
       } catch (e) {
         console.error("AsyncStorage Save Error during auto-reset:", e);
       }

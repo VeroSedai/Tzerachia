@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AppState, CustomTask } from '../types';
 import { supabase } from '../lib/supabase';
+import { getTodayStr, getStartOfWeekStr, getStartOfMonthStr } from '../utils/dateUtils';
 
 let activeSubscriptionChannel: any = null;
 let activeSubscriptionHouseholdId: string | null = null;
@@ -9,19 +10,36 @@ export const useHouseholdSync = (
   setState: React.Dispatch<React.SetStateAction<AppState>>
 ) => {
   const fetchHouseholdData = async (householdId: string) => {
+    const today = getTodayStr();
+    const startOfWeek = getStartOfWeekStr();
+    const startOfMonth = getStartOfMonthStr();
+
     const [completionsRes, customTasksRes, customGuidesRes, customRecipesRes] = await Promise.all([
-      supabase.from('task_completions').select('*').eq('household_id', householdId),
+      supabase.from('task_completions').select('*').eq('household_id', householdId).gte('completed_at', startOfMonth),
       supabase.from('custom_tasks').select('*').eq('household_id', householdId),
       supabase.from('custom_guides').select('*').eq('household_id', householdId),
       supabase.from('custom_recipes').select('*').eq('household_id', householdId)
     ]);
     
     if (completionsRes.data) {
-      const completedIds = completionsRes.data.map((c: any) => c.task_id);
+      const completions = completionsRes.data;
+
+      const todayCompletedIds = completions
+        .filter((c: any) => c.completed_at === today)
+        .map((c: any) => c.task_id);
+
+      const weekCompletedIds = completions
+        .filter((c: any) => c.completed_at >= startOfWeek)
+        .map((c: any) => c.task_id);
+
+      const monthCompletedIds = completions
+        .filter((c: any) => c.completed_at >= startOfMonth)
+        .map((c: any) => c.task_id);
+
       setState(prev => {
-         const updatedDaily = prev.dailyTasks.map(t => ({ ...t, completed: completedIds.includes(t.id) }));
-         const updatedWeekly = prev.weeklyTasks.map(t => ({ ...t, completed: completedIds.includes(t.id) }));
-         const updatedMonthly = prev.monthlyTasks.map(t => ({ ...t, completed: completedIds.includes(t.id) }));
+         const updatedDaily = prev.dailyTasks.map(t => ({ ...t, completed: todayCompletedIds.includes(t.id) }));
+         const updatedWeekly = prev.weeklyTasks.map(t => ({ ...t, completed: weekCompletedIds.includes(t.id) }));
+         const updatedMonthly = prev.monthlyTasks.map(t => ({ ...t, completed: monthCompletedIds.includes(t.id) }));
          return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
       });
     }
@@ -59,12 +77,38 @@ export const useHouseholdSync = (
         const newPayload = payload.new as any;
         const oldPayload = payload.old as any;
         const taskId = newPayload?.task_id || oldPayload?.task_id;
+        const completedAt = newPayload?.completed_at || oldPayload?.completed_at;
         const isCompleted = payload.eventType === 'INSERT' || payload.eventType === 'UPDATE';
         if (taskId) {
+           const today = getTodayStr();
+           const startOfWeek = getStartOfWeekStr();
+           const startOfMonth = getStartOfMonthStr();
+
            setState(prev => {
-             const updatedDaily = prev.dailyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
-             const updatedWeekly = prev.weeklyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
-             const updatedMonthly = prev.monthlyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
+             const isDailyTarget = prev.dailyTasks.some(t => t.id === taskId);
+             const isWeeklyTarget = prev.weeklyTasks.some(t => t.id === taskId);
+             const isMonthlyTarget = prev.monthlyTasks.some(t => t.id === taskId);
+
+             let updatedDaily = prev.dailyTasks;
+             let updatedWeekly = prev.weeklyTasks;
+             let updatedMonthly = prev.monthlyTasks;
+
+             if (isDailyTarget) {
+               if (!completedAt || completedAt === today) {
+                 updatedDaily = prev.dailyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
+               }
+             }
+             if (isWeeklyTarget) {
+               if (!completedAt || completedAt >= startOfWeek) {
+                 updatedWeekly = prev.weeklyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
+               }
+             }
+             if (isMonthlyTarget) {
+               if (!completedAt || completedAt >= startOfMonth) {
+                 updatedMonthly = prev.monthlyTasks.map(t => t.id === taskId ? { ...t, completed: isCompleted } : t);
+               }
+             }
+
              return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
            });
         }
