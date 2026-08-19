@@ -127,10 +127,10 @@ export default function TodayScreen({ navigation }: Props) {
           >
             <Ionicons name="time-outline" size={16} color="#00A3A1" />
             <Text style={styles.historyBannerText}>
-              {state.language === 'it' ? 'Storico: ' : 'History: '} {dateString}
+              {t('history_prefix', state.language)} {dateString}
             </Text>
             <View style={styles.historyReturnBtn}>
-              <Text style={styles.historyReturnText}>{state.language === 'it' ? 'Torna a Oggi' : 'Back to Today'}</Text>
+              <Text style={styles.historyReturnText}>{t('back_to_today', state.language)}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -140,7 +140,7 @@ export default function TodayScreen({ navigation }: Props) {
         {/* Daily Tasks */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('daily_tasks', state.language)}</Text>
-          <Text style={styles.sectionSubtitle}>{5 - completedDailyTasksCount} da completare</Text>
+          <Text style={styles.sectionSubtitle}>{5 - completedDailyTasksCount} {t('tasks_to_complete', state.language)}</Text>
         </View>
 
         <View style={styles.tasksList}>
@@ -187,7 +187,7 @@ export default function TodayScreen({ navigation }: Props) {
           <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center' }}>
             <TextInput
               style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D0E3E3', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
-              placeholder="Nuova attività extra..."
+              placeholder={t('new_extra_placeholder', state.language)}
               value={newCustomTask}
               onChangeText={setNewCustomTask}
               onSubmitEditing={handleAddCustomTask}
@@ -203,7 +203,7 @@ export default function TodayScreen({ navigation }: Props) {
         ) : (
           <TouchableOpacity style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }} onPress={() => setIsAddingCustom(true)}>
             <Feather name="plus" size={16} color="#00A3A1" />
-            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>Aggiungi attività</Text>
+            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>{t('add_task_btn', state.language)}</Text>
           </TouchableOpacity>
         )}
 
@@ -245,9 +245,9 @@ export default function TodayScreen({ navigation }: Props) {
               <Text style={styles.focusDescription}>
                 {focusTask ? (
                   focusTask.completed 
-                    ? 'Ottimo lavoro! Hai completato il focus di oggi.'
-                    : `Focus di oggi: ${focusTask.title}. Esegui le pulizie mirate.`
-                ) : 'Oggi è giorno di riposo, mantieni solo la base.'}
+                    ? t('focus_completed_msg', state.language)
+                    : t('focus_in_progress_msg', state.language)
+                ) : t('rest_day_msg', state.language)}
               </Text>
 
               {focusTask && (
@@ -264,7 +264,7 @@ export default function TodayScreen({ navigation }: Props) {
                         onPress={() => navigation.navigate('GuidesStack')}
                       >
                         <View style={styles.guideCheckbox} />
-                        <Text style={styles.guideText}>Apri guida: {focusTask.title}</Text>
+                        <Text style={styles.guideText}>{t('open_guide_prefix', state.language)} {focusTask.title}</Text>
                         <Ionicons name="chevron-forward" size={16} color="#8A7B66" style={{ marginLeft: 'auto' }} />
                       </TouchableOpacity>
                       

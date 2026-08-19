@@ -243,7 +243,7 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={styles.settingTitle}>{t('sync_title', state.language)}</Text>
-            <Text style={styles.settingDescription}>Sincronizza lo stato con il tuo partner</Text>
+            <Text style={styles.settingDescription}>{t('sync_subtitle', state.language)}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
         </TouchableOpacity>
@@ -254,7 +254,7 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={styles.settingTitle}>{t('reset_daily', state.language)}</Text>
-            <Text style={styles.settingDescription}>Azzera le 5 task giornaliere di oggi</Text>
+            <Text style={styles.settingDescription}>{t('reset_daily_sub', state.language)}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
         </TouchableOpacity>
@@ -265,7 +265,7 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={styles.settingTitle}>{t('reset_challenges', state.language)}</Text>
-            <Text style={styles.settingDescription}>Cancella i progressi della sfida in corso</Text>
+            <Text style={styles.settingDescription}>{t('reset_challenges_sub', state.language)}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8A9A9A" />
         </TouchableOpacity>
@@ -276,11 +276,11 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>{t('factory_reset', state.language)}</Text>
-            <Text style={styles.settingDescription}>Elimina tutti i dati e riporta l'app a zero</Text>
+            <Text style={styles.settingDescription}>{t('factory_reset_sub', state.language)}</Text>
           </View>
         </TouchableOpacity>
 
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>CASA CONDIVISA (CLOUD)</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('shared_household', state.language)}</Text>
 
         {state.household ? (
           <>
@@ -289,8 +289,8 @@ export default function SettingsScreen({ navigation }: Props) {
                 <Feather name="home" size={20} color="#0099FF" />
               </View>
               <View style={styles.settingTextContainer}>
-                <Text style={styles.settingTitle}>{state.household.name || 'La mia Casa'}</Text>
-                <Text style={styles.settingDescription}>Codice Invito: {state.household.invite_code}</Text>
+                <Text style={styles.settingTitle}>{state.household.name || t('my_household', state.language)}</Text>
+                <Text style={styles.settingDescription}>{t('invite_code_label', state.language)} {state.household.invite_code}</Text>
               </View>
             </View>
 
@@ -299,8 +299,8 @@ export default function SettingsScreen({ navigation }: Props) {
                 <Feather name="log-out" size={20} color="#FF6B6B" />
               </View>
               <View style={styles.settingTextContainer}>
-                <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>Lascia / Elimina Casa</Text>
-                <Text style={styles.settingDescription}>Abbandona il gruppo condiviso</Text>
+                <Text style={[styles.settingTitle, { color: '#FF6B6B' }]}>{t('leave_household', state.language)}</Text>
+                <Text style={styles.settingDescription}>{t('leave_household_sub', state.language)}</Text>
               </View>
             </TouchableOpacity>
           </>
@@ -308,12 +308,12 @@ export default function SettingsScreen({ navigation }: Props) {
           <>
             <View style={styles.settingItem}>
               <View style={styles.settingTextContainer}>
-                <Text style={styles.settingTitle}>Unisciti a una Casa</Text>
+                <Text style={styles.settingTitle}>{t('join_household_title', state.language)}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={inviteCodeInput}
                   onChangeText={setInviteCodeInput}
-                  placeholder="Codice Invito (6 lettere)"
+                  placeholder={t('join_household_placeholder', state.language)}
                   autoCapitalize="characters"
                   maxLength={6}
                 />
@@ -327,18 +327,18 @@ export default function SettingsScreen({ navigation }: Props) {
                 }} 
                 style={[styles.actionButton, inviteCodeInput.length !== 6 && {opacity: 0.5}]}
               >
-                <Text style={styles.actionButtonText}>Unisciti</Text>
+                <Text style={styles.actionButtonText}>{t('join_btn', state.language)}</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.settingItem}>
               <View style={styles.settingTextContainer}>
-                <Text style={styles.settingTitle}>Crea nuova Casa</Text>
+                <Text style={styles.settingTitle}>{t('create_household_title', state.language)}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={householdNameInput}
                   onChangeText={setHouseholdNameInput}
-                  placeholder="Nome (es. Casa Nostra)"
+                  placeholder={t('create_household_placeholder', state.language)}
                 />
               </View>
               <TouchableOpacity 
@@ -348,7 +348,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 }} 
                 style={styles.actionButton}
               >
-                <Text style={styles.actionButtonText}>Crea</Text>
+                <Text style={styles.actionButtonText}>{t('create_btn', state.language)}</Text>
               </TouchableOpacity>
             </View>
           </>

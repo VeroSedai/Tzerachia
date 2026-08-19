@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -27,7 +28,7 @@ export default function TimerWidget() {
         <TouchableOpacity style={styles.compactHeader} onPress={toggleExpand} activeOpacity={0.8}>
           <View style={styles.compactLeft}>
             <Ionicons name="time-outline" size={18} color="#00A3A1" />
-            <Text style={styles.compactTitle}>Timer Sessione</Text>
+            <Text style={styles.compactTitle}>{t('session_timer', state.language)}</Text>
             <Text style={styles.compactTimeText}>{timeFormatted}</Text>
           </View>
           <View style={styles.compactRight}>
@@ -52,7 +53,7 @@ export default function TimerWidget() {
       <TouchableOpacity style={styles.header} onPress={toggleExpand} activeOpacity={0.8}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Ionicons name="time-outline" size={16} color="#FFFFFF" />
-          <Text style={styles.headerText}>TIMER SESSIONE</Text>
+          <Text style={styles.headerText}>{t('session_timer', state.language).toUpperCase()}</Text>
         </View>
         <Ionicons name="chevron-up" size={18} color="#FFFFFF" />
       </TouchableOpacity>
@@ -66,7 +67,7 @@ export default function TimerWidget() {
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.playButton} onPress={toggleTimerActive}>
           <Ionicons name={state.timerActive ? 'pause' : 'play-outline'} size={18} color="#00A3A1" />
-          <Text style={styles.playButtonText}>{state.timerActive ? 'Pausa' : 'Avvia Timer'}</Text>
+          <Text style={styles.playButtonText}>{state.timerActive ? t('pause_timer', state.language) : t('start_timer', state.language)}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -77,7 +78,7 @@ export default function TimerWidget() {
           }}
         >
           <Ionicons name="refresh" size={16} color="#FFFFFF" />
-          <Text style={styles.resetButtonText}>Reset</Text>
+          <Text style={styles.resetButtonText}>{t('reset', state.language)}</Text>
         </TouchableOpacity>
       </View>
     </View>

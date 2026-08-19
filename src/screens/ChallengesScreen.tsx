@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppContext } from '../context/AppContext';
 import { RootStackParamList } from '../types';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../i18n';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ChallengesList'>;
@@ -26,10 +27,10 @@ export default function ChallengesScreen({ navigation }: Props) {
 
   const getChallengeStatusText = (id: string) => {
     if (activeChallenge?.id === id) {
-      if (activeChallenge.status === 'completed') return 'Completata!';
-      return `In Corso - Giorno ${activeChallenge.currentDay} di ${activeChallenge.durationDays}`;
+      if (activeChallenge.status === 'completed') return t('challenge_completed', state.language);
+      return `${t('challenge_in_progress', state.language)} - ${t('day_progress', state.language)} ${activeChallenge.currentDay} ${t('of', state.language)} ${activeChallenge.durationDays}`;
     }
-    return 'Non Iniziata';
+    return t('challenge_not_started', state.language);
   };
 
   const getChallengeProgress = (id: string) => {
@@ -42,7 +43,7 @@ export default function ChallengesScreen({ navigation }: Props) {
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.headerTitle}>Le Tue Sfide</Text>
+        <Text style={styles.headerTitle}>{t('challenges_header', state.language)}</Text>
         
         {/* 7-Day Quick Start Card */}
         <View style={styles.card}>
@@ -66,7 +67,7 @@ export default function ChallengesScreen({ navigation }: Props) {
             onPress={() => handlePress('7-day')}
           >
             <Text style={styles.actionButtonText}>
-              {activeChallenge?.id === '7-day' && activeChallenge.status === 'active' ? 'Continua Sfida' : 'Avvia Sfida'}
+              {activeChallenge?.id === '7-day' && activeChallenge.status === 'active' ? t('in_progress', state.language) : t('start_challenge', state.language)}
             </Text>
           </TouchableOpacity>
         </View>
@@ -93,7 +94,7 @@ export default function ChallengesScreen({ navigation }: Props) {
             onPress={() => handlePress('28-day')}
           >
             <Text style={styles.actionButtonText}>
-              {activeChallenge?.id === '28-day' && activeChallenge.status === 'active' ? 'Continua Sfida' : 'Avvia Sfida'}
+              {activeChallenge?.id === '28-day' && activeChallenge.status === 'active' ? t('in_progress', state.language) : t('start_challenge', state.language)}
             </Text>
           </TouchableOpacity>
         </View>

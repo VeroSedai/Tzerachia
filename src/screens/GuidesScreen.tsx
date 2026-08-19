@@ -79,60 +79,6 @@ export default function GuidesScreen({ navigation }: Props) {
     <Text style={[styles.sectionTitle, { marginTop: title.includes('RICETTE') ? 24 : 0 }]}>{title}</Text>
   ), []);
 
-  const ListHeader = useCallback(() => (
-    <>
-      <View style={styles.headerRow}>
-        <View style={styles.logoRow}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>S</Text>
-          </View>
-          <Text style={styles.appName}>Tzerachìa</Text>
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-          <Ionicons name="settings-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Text style={[styles.screenTitle, { marginBottom: 0 }]}>{t('tab_guides', state.language)}</Text>
-        <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
-          onPress={() => navigation.navigate('AddGuide')}
-        >
-          <Ionicons name="add" size={16} color="#FFFFFF" />
-          <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>{t('add_guide', state.language)}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t('search_guides', state.language)}
-          placeholderTextColor="#8A9A9A"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      <Text style={styles.sectionTitle}>{t('quick_categories', state.language)}</Text>
-      <View style={styles.categoriesWrapper}>
-        {CATEGORIES.map(cat => (
-          <TouchableOpacity
-            key={cat.label}
-            style={[styles.categoryChip, activeCategory === cat.label && styles.categoryChipActive]}
-            onPress={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
-          >
-            <Feather name={cat.icon as any} size={14} color={activeCategory === cat.label ? '#FFFFFF' : '#1A2F2F'} style={{ marginRight: 6 }} />
-            <Text style={[styles.categoryText, activeCategory === cat.label && styles.categoryTextActive]}>
-              {cat.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </>
-  ), [state.language, navigation, searchQuery, CATEGORIES, activeCategory]);
-
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <SectionList<any, any>
@@ -142,7 +88,59 @@ export default function GuidesScreen({ navigation }: Props) {
         keyExtractor={item => item.id}
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
-        ListHeaderComponent={ListHeader}
+        ListHeaderComponent={
+          <>
+            <View style={styles.headerRow}>
+              <View style={styles.logoRow}>
+                <View style={styles.logoCircle}>
+                  <Text style={styles.logoText}>T</Text>
+                </View>
+                <Text style={styles.appName}>Tzerachìa</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+                <Ionicons name="settings-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={[styles.screenTitle, { marginBottom: 0 }]}>{t('tab_guides', state.language)}</Text>
+              <TouchableOpacity 
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3A1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}
+                onPress={() => navigation.navigate('AddGuide')}
+              >
+                <Ionicons name="add" size={16} color="#FFFFFF" />
+                <Text style={{ color: '#FFFFFF', fontWeight: 'bold', marginLeft: 4 }}>{t('add_guide', state.language)}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t('search_guides', state.language)}
+                placeholderTextColor="#8A9A9A"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            <Text style={styles.sectionTitle}>{t('quick_categories', state.language)}</Text>
+            <View style={styles.categoriesWrapper}>
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat.label}
+                  style={[styles.categoryChip, activeCategory === cat.label && styles.categoryChipActive]}
+                  onPress={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
+                >
+                  <Feather name={cat.icon as any} size={14} color={activeCategory === cat.label ? '#FFFFFF' : '#1A2F2F'} style={{ marginRight: 6 }} />
+                  <Text style={[styles.categoryText, activeCategory === cat.label && styles.categoryTextActive]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        }
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         SectionSeparatorComponent={() => <View style={{ height: 12 }} />}

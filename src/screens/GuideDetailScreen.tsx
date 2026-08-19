@@ -7,6 +7,7 @@ import { Recipe, Guide } from '../types';
 import TaskItem from '../components/TaskItem';
 import TimerWidget from '../components/TimerWidget';
 import { useAppContext } from '../context/AppContext';
+import { t } from '../i18n';
 
 type RootStackParamList = {
   GuidesList: undefined;
@@ -93,18 +94,18 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm("Sei sicuro di voler eliminare questo elemento?")) {
+      if (window.confirm(t('confirm_delete', state.language))) {
         doDelete();
       }
       return;
     }
 
     Alert.alert(
-      "Elimina",
-      "Sei sicuro di voler eliminare questo elemento?",
+      t('delete', state.language),
+      t('confirm_delete', state.language),
       [
-        { text: "Annulla", style: "cancel" },
-        { text: "Elimina", style: "destructive", onPress: doDelete }
+        { text: t('cancel', state.language), style: "cancel" },
+        { text: t('delete', state.language), style: "destructive", onPress: doDelete }
       ]
     );
   };
@@ -129,7 +130,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container}>
         {type === 'recipe' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingredienti</Text>
+            <Text style={styles.sectionTitle}>{t('ingredients', state.language)}</Text>
             <View style={styles.card}>
               {normalizedIngredients.map((ingredient, index) => (
                 <View key={index} style={[styles.ingredientRow, index === normalizedIngredients.length - 1 && { borderBottomWidth: 0 }]}>
@@ -149,7 +150,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
             {!sessionActive ? (
               <TouchableOpacity style={styles.startButton} onPress={startSession} activeOpacity={0.85}>
                 <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 8 }} />
-                <Text style={styles.startButtonText}>Avvia sessione guidata</Text>
+                <Text style={styles.startButtonText}>{t('start_guided_session', state.language)}</Text>
                 {guideDuration && (
                   <View style={styles.durationBadge}>
                     <Ionicons name="time-outline" size={12} color="#00A3A1" />
@@ -161,7 +162,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
               <TimerWidget />
             )}
 
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Procedura</Text>
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('procedure', state.language)}</Text>
             <View style={styles.card}>
               {normalizedSteps.map((stepItem, index) => {
                 const isCompleted = !!checkedItems[`step-${index}`];

@@ -5,6 +5,7 @@ export const dictionary = {
     tab_schedule: 'Pianifica',
     tab_challenges: 'Sfide',
     tab_guides: 'Guide',
+
     // General
     done: 'Fatto',
     completed: 'Completato',
@@ -17,6 +18,11 @@ export const dictionary = {
     save: 'Salva',
     delete: 'Elimina',
     are_you_sure: 'Sei sicuro?',
+    copy: 'Copia',
+    share: 'Condividi',
+    success: 'Successo',
+    error: 'Errore',
+
     // Today Screen
     today_date: 'OGGI',
     session_timer: 'TIMER SESSIONE',
@@ -27,6 +33,16 @@ export const dictionary = {
     daily_tasks: 'TASK QUOTIDIANI',
     weekly_focus: 'FOCUS SETTIMANALE',
     no_tasks_today: 'Nessun task settimanale previsto per oggi!',
+    tasks_to_complete: 'da completare',
+    add_task_btn: 'Aggiungi attività',
+    new_extra_placeholder: 'Nuova attività extra...',
+    history_prefix: 'Storico:',
+    back_to_today: 'Torna a Oggi',
+    focus_completed_msg: 'Ottimo lavoro! Hai completato il focus di oggi.',
+    focus_in_progress_msg: 'Esegui le pulizie mirate del giorno.',
+    rest_day_msg: 'Oggi è giorno di riposo, mantieni solo la base.',
+    open_guide_prefix: 'Apri guida:',
+
     // Schedule Screen
     planning: 'PIANIFICAZIONE',
     weekly: 'Settimanale',
@@ -38,21 +54,40 @@ export const dictionary = {
     monthly_tasks: 'Task Mensili',
     monthly_subtitle: 'Da completare una volta al mese per mantenere la casa al top.',
     reset_monthly_confirm: 'Sei sicuro di voler resettare tutti i task mensili?',
-    // Settings
+
+    // Settings & Household
     settings: 'Impostazioni',
     notifications: 'NOTIFICHE',
     daily_reminders: 'Promemoria Giornalieri',
     reminder_time: 'Orario Promemoria',
     data_management: 'GESTIONE DATI',
     reset_daily: 'Reset Daily Tasks',
+    reset_daily_sub: 'Azzera le 5 task giornaliere di oggi',
     reset_weekly: 'Reset Settimana',
+    reset_weekly_sub: 'Ripristina i focus settimanali',
     reset_monthly: 'Reset Mensile',
+    reset_monthly_sub: 'Ripristina i task mensili',
     reset_challenges: 'Reset Sfide',
+    reset_challenges_sub: 'Cancella i progressi della sfida in corso',
     factory_reset: 'Factory Reset',
+    factory_reset_sub: "Elimina tutti i dati e riporta l'app a zero",
     factory_reset_confirm: "Questo cancellerà TUTTI i dati salvati e le guide personalizzate. L'app tornerà allo stato iniziale. Procedere?",
     language: 'LINGUA / LANGUAGE',
 
+    shared_household: 'CASA CONDIVISA (CLOUD)',
+    my_household: 'La Mia Casa',
+    invite_code_label: 'Codice Invito:',
+    leave_household: 'Lascia / Elimina Casa',
+    leave_household_sub: 'Abbandona il gruppo condiviso',
+    join_household_title: 'Unisciti a una Casa',
+    join_household_placeholder: 'Codice Invito (6 lettere)',
+    join_btn: 'Unisciti',
+    create_household_title: 'Crea nuova Casa',
+    create_household_placeholder: 'Nome (es. Casa Nostra)',
+    create_btn: 'Crea',
+
     sync_title: 'Sincronizza di Coppia',
+    sync_subtitle: 'Sincronizza lo stato con il tuo partner',
     sync_telegram: 'Telegram',
     sync_qr: 'QR Code',
     sync_send_telegram: 'Invia su Telegram',
@@ -62,13 +97,26 @@ export const dictionary = {
     sync_camera_error: 'Errore fotocamera',
     sync_cancel: 'Annulla',
 
-    // Guides Screen
+    // Guides & Recipes
     search_guides: 'Cerca guide e ricette...',
     quick_categories: 'CATEGORIE RAPIDE',
     recipes: 'Ricette',
     cleaning_guides: 'Guide Pulizia',
     my_guides: 'Le mie guide',
     add_guide: 'Aggiungi',
+    start_guided_session: 'Avvia sessione guidata',
+    procedure: 'Procedura',
+    ingredients: 'Ingredienti',
+    confirm_delete: 'Sei sicuro di voler eliminare questo elemento?',
+
+    // Challenges
+    challenges_header: 'SFIDE DI PULIZIA',
+    challenge_not_started: 'Non Iniziata',
+    challenge_in_progress: 'In Corso',
+    challenge_completed: 'Completata!',
+    start_challenge: 'Inizia Sfida',
+    day_progress: 'Giorno',
+    of: 'di',
   },
   en: {
     // Tabs
@@ -76,6 +124,7 @@ export const dictionary = {
     tab_schedule: 'Schedule',
     tab_challenges: 'Challenges',
     tab_guides: 'Guides',
+
     // General
     done: 'Done',
     completed: 'Completed',
@@ -88,6 +137,11 @@ export const dictionary = {
     save: 'Save',
     delete: 'Delete',
     are_you_sure: 'Are you sure?',
+    copy: 'Copy',
+    share: 'Share',
+    success: 'Success',
+    error: 'Error',
+
     // Today Screen
     today_date: 'TODAY',
     session_timer: 'SESSION TIMER',
@@ -98,6 +152,16 @@ export const dictionary = {
     daily_tasks: 'DAILY TASKS',
     weekly_focus: 'WEEKLY FOCUS',
     no_tasks_today: 'No weekly tasks scheduled for today!',
+    tasks_to_complete: 'to complete',
+    add_task_btn: 'Add Task',
+    new_extra_placeholder: 'New extra task...',
+    history_prefix: 'History:',
+    back_to_today: 'Back to Today',
+    focus_completed_msg: "Great job! You completed today's focus.",
+    focus_in_progress_msg: "Perform targeted cleaning for today.",
+    rest_day_msg: 'Today is a rest day, just maintain the basics.',
+    open_guide_prefix: 'Open guide:',
+
     // Schedule Screen
     planning: 'PLANNING',
     weekly: 'Weekly',
@@ -109,20 +173,40 @@ export const dictionary = {
     monthly_tasks: 'Monthly Tasks',
     monthly_subtitle: 'Complete once a month to keep your home at its best.',
     reset_monthly_confirm: 'Are you sure you want to reset all monthly tasks?',
-    // Settings
+
+    // Settings & Household
     settings: 'Settings',
     notifications: 'NOTIFICATIONS',
     daily_reminders: 'Daily Reminders',
     reminder_time: 'Reminder Time',
     data_management: 'DATA MANAGEMENT',
     reset_daily: 'Reset Daily Tasks',
+    reset_daily_sub: "Reset today's 5 daily tasks",
     reset_weekly: 'Reset Weekly Tasks',
+    reset_weekly_sub: 'Reset weekly focus tasks',
     reset_monthly: 'Reset Monthly Tasks',
+    reset_monthly_sub: 'Reset monthly tasks',
     reset_challenges: 'Reset Challenges',
+    reset_challenges_sub: 'Clear current challenge progress',
     factory_reset: 'Factory Reset',
+    factory_reset_sub: 'Erase all data and reset app',
     factory_reset_confirm: 'This will erase ALL saved data and custom guides. The app will return to its initial state. Proceed?',
     language: 'LANGUAGE / LINGUA',
+
+    shared_household: 'SHARED HOUSEHOLD (CLOUD)',
+    my_household: 'My Household',
+    invite_code_label: 'Invite Code:',
+    leave_household: 'Leave / Delete Household',
+    leave_household_sub: 'Leave the shared group',
+    join_household_title: 'Join a Household',
+    join_household_placeholder: 'Invite Code (6 letters)',
+    join_btn: 'Join',
+    create_household_title: 'Create new Household',
+    create_household_placeholder: 'Name (e.g. Our Home)',
+    create_btn: 'Create',
+
     sync_title: 'Partner Sync',
+    sync_subtitle: 'Sync state with your partner',
     sync_telegram: 'Telegram',
     sync_qr: 'QR Code',
     sync_send_telegram: 'Send via Telegram',
@@ -131,13 +215,27 @@ export const dictionary = {
     sync_grant_permission: 'Grant permission',
     sync_camera_error: 'Camera error',
     sync_cancel: 'Cancel',
-    // Guides Screen
+
+    // Guides & Recipes
     search_guides: 'Search guides and recipes...',
     quick_categories: 'QUICK CATEGORIES',
     recipes: 'Recipes',
     cleaning_guides: 'Cleaning Guides',
     my_guides: 'My Guides',
     add_guide: 'Add',
+    start_guided_session: 'Start Guided Session',
+    procedure: 'Procedure',
+    ingredients: 'Ingredients',
+    confirm_delete: 'Are you sure you want to delete this item?',
+
+    // Challenges
+    challenges_header: 'CLEANING CHALLENGES',
+    challenge_not_started: 'Not Started',
+    challenge_in_progress: 'In Progress',
+    challenge_completed: 'Completed!',
+    start_challenge: 'Start Challenge',
+    day_progress: 'Day',
+    of: 'of',
   }
 };
 
