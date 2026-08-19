@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 interface TaskItemProps {
   title: string;
@@ -11,7 +12,7 @@ export default function TaskItem({ title, completed, onToggle }: TaskItemProps) 
   return (
     <TouchableOpacity style={styles.container} onPress={onToggle} activeOpacity={0.7}>
       <View style={[styles.checkbox, completed && styles.checkboxChecked]}>
-        {completed && <Text style={styles.checkmark}>✓</Text>}
+        {completed && <Feather name="check" size={14} color="#FFFFFF" />}
       </View>
       <Text style={[styles.title, completed && styles.titleCompleted]}>{title}</Text>
     </TouchableOpacity>

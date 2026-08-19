@@ -155,42 +155,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [syncTasks]);
 
   const createHousehold = useCallback(async (name?: string) => {
-    setState(prev => {
-      if (!prev.session) return prev;
-      (async () => {
-        const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const { data, error } = await supabase.from('households').insert({ name: name || 'La mia Casa', invite_code: inviteCode }).select().single();
-        if (data) {
-          await supabase.from('household_members').insert({ household_id: data.id, user_id: prev.session!.user.id });
-          fetchHousehold(prev.session!.user.id);
-        } else if (error) {
-          Alert.alert("Errore", "Non è stato possibile creare la casa.");
+    let currentSession = state.session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.signInAnonymously();
+      if (data?.session) {
+        currentSession = data.session;
+        setState(prev => ({ ...prev, session: data.session }));
+      }
+    }
+
+    if (!currentSession) {
+      Alert.alert("Errore Autenticazione", "Impossibile connettersi a Supabase per creare la casa. Verifica la connessione.");
+      return;
+    }
+
+    try {
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data, error } = await supabase
+        .from('households')
+        .insert({ name: name?.trim() || 'La mia Casa', invite_code: inviteCode })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating household:", error);
+        Alert.alert("Errore Supabase", `Impossibile creare la casa: ${error.message}`);
+        return;
+      }
+
+      if (data) {
+        const { error: memberError } = await supabase
+          .from('household_members')
+          .insert({ household_id: data.id, user_id: currentSession.user.id });
+
+        if (memberError) {
+          console.error("Error joining created household:", memberError);
+          Alert.alert("Errore Membro Casa", `Impossibile aggiungerti come membro: ${memberError.message}`);
+          return;
         }
-      })();
-      return prev;
-    });
-  }, [fetchHousehold]);
+
+        const newHousehold = { id: data.id, name: data.name, invite_code: data.invite_code };
+        setState(prev => ({ ...prev, household: newHousehold }));
+
+        fetchHousehold(currentSession.user.id);
+        Alert.alert("Successo!", `Casa creata con successo! Codice invito: ${inviteCode}`);
+      }
+    } catch (e: any) {
+      console.error("Exception creating household:", e);
+      Alert.alert("Errore", `Errore imprevisto: ${e.message || e}`);
+    }
+  }, [state.session, fetchHousehold]);
 
   const joinHousehold = useCallback(async (inviteCode: string) => {
-    setState(prev => {
-      if (!prev.session) return prev;
-      (async () => {
-        const { data: hh } = await supabase.from('households').select('*').eq('invite_code', inviteCode.toUpperCase()).single();
-        if (hh) {
-          const { error } = await supabase.from('household_members').insert({ household_id: hh.id, user_id: prev.session!.user.id });
-          if (!error) {
-            fetchHousehold(prev.session!.user.id);
-            Alert.alert("Successo", "Ti sei unito alla casa!");
-          } else {
-            Alert.alert("Errore", "Impossibile unirsi alla casa.");
-          }
+    let currentSession = state.session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.signInAnonymously();
+      if (data?.session) {
+        currentSession = data.session;
+        setState(prev => ({ ...prev, session: data.session }));
+      }
+    }
+
+    if (!currentSession) {
+      Alert.alert("Errore Autenticazione", "Impossibile connettersi a Supabase per unirti alla casa. Verifica la connessione.");
+      return;
+    }
+
+    try {
+      const { data: hh, error: fetchError } = await supabase
+        .from('households')
+        .select('*')
+        .eq('invite_code', inviteCode.trim().toUpperCase())
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("Error searching household:", fetchError);
+        Alert.alert("Errore Supabase", `Impossibile cercare la casa: ${fetchError.message}`);
+        return;
+      }
+
+      if (hh) {
+        const { error: insertError } = await supabase
+          .from('household_members')
+          .insert({ household_id: hh.id, user_id: currentSession.user.id });
+
+        if (!insertError) {
+          const joinedHousehold = { id: hh.id, name: hh.name, invite_code: hh.invite_code };
+          setState(prev => ({ ...prev, household: joinedHousehold }));
+          fetchHousehold(currentSession.user.id);
+          Alert.alert("Successo", "Ti sei unito alla casa!");
         } else {
-          Alert.alert("Errore", "Codice invito non valido.");
+          console.error("Error joining household:", insertError);
+          Alert.alert("Errore", `Impossibile unirsi alla casa: ${insertError.message}`);
         }
-      })();
-      return prev;
-    });
-  }, [fetchHousehold]);
+      } else {
+        Alert.alert("Errore", "Codice invito non valido.");
+      }
+    } catch (e: any) {
+      console.error("Exception joining household:", e);
+      Alert.alert("Errore", `Errore imprevisto: ${e.message || e}`);
+    }
+  }, [state.session, fetchHousehold]);
 
   const leaveHousehold = useCallback(async () => {
     if (!state.household || !state.session) return;

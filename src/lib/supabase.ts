@@ -6,7 +6,7 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("⚠️ Manca la configurazione Supabase. L'app userà dei valori di fallback, la sincronizzazione non funzionerà.");
+  console.warn("Manca la configurazione Supabase. L'app userà dei valori di fallback, la sincronizzazione non funzionerà.");
 }
 
 const safeUrl = supabaseUrl || 'https://fallback.supabase.co';

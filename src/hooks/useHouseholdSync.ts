@@ -193,17 +193,41 @@ export const useHouseholdSync = (
   };
 
   const fetchHousehold = async (userId: string) => {
-    const { data } = await supabase
-      .from('household_members')
-      .select('household_id, households(id, name, invite_code)')
-      .eq('user_id', userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('household_members')
+        .select('household_id, households(id, name, invite_code)')
+        .eq('user_id', userId)
+        .order('joined_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Error fetching household members:", error);
+        return;
+      }
       
-    if (data && data.households) {
-      const hh = Array.isArray(data.households) ? data.households[0] : data.households;
-      setState(prev => ({ ...prev, household: hh as any }));
-      fetchHouseholdData(hh.id);
-      setupRealtimeSubscriptions(hh.id);
+      if (data && data.length > 0) {
+        const memberRecord = data[0];
+        let hh: any = memberRecord.households;
+        if (Array.isArray(hh)) hh = hh[0];
+        
+        if (!hh && memberRecord.household_id) {
+          const { data: hhData } = await supabase
+            .from('households')
+            .select('id, name, invite_code')
+            .eq('id', memberRecord.household_id)
+            .maybeSingle();
+          if (hhData) hh = hhData;
+        }
+
+        if (hh) {
+          setState(prev => ({ ...prev, household: hh as any }));
+          fetchHouseholdData(hh.id);
+          setupRealtimeSubscriptions(hh.id);
+        }
+      }
+    } catch (e) {
+      console.error("Exception in fetchHousehold:", e);
     }
   };
 
@@ -212,7 +236,13 @@ export const useHouseholdSync = (
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          await supabase.auth.signInAnonymously();
+          const { data: anonData, error } = await supabase.auth.signInAnonymously();
+          if (anonData?.session) {
+            setState(prev => ({ ...prev, session: anonData.session }));
+            fetchHousehold(anonData.session.user.id);
+          } else if (error) {
+            console.warn('signInAnonymously error:', error);
+          }
         } else {
           setState(prev => ({ ...prev, session }));
           fetchHousehold(session.user.id);

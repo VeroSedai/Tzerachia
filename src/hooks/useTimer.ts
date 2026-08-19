@@ -14,7 +14,7 @@ export const useTimer = (
           if (prev.timerDuration <= 1) {
             clearInterval(interval);
             Vibration.vibrate([500, 500, 500]);
-            Alert.alert('Tempo scaduto! 🧹', 'Ottimo lavoro con la sessione Tzerachìa!');
+            Alert.alert('Tempo scaduto!', 'Ottimo lavoro con la sessione Tzerachìa!');
             return { ...prev, timerDuration: 0, timerActive: false };
           }
           return { ...prev, timerDuration: prev.timerDuration - 1 };

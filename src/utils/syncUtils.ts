@@ -37,8 +37,8 @@ export const shareToTelegram = (state: AppState, language: 'it' | 'en') => {
   const syncUrl = `tzerachia://sync?data=${encoded}`;
   
   const summary = language === 'it' 
-    ? `🧹 Tzerachìa Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:`
-    : `🧹 Tzerachìa Sync\n\nI completed some chores! Click the link to sync our app:`;
+    ? `Tzerachìa Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:`
+    : `Tzerachìa Sync\n\nI completed some chores! Click the link to sync our app:`;
 
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(syncUrl)}&text=${encodeURIComponent(summary)}`;
   

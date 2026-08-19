@@ -26,7 +26,7 @@ export default function ChallengesScreen({ navigation }: Props) {
 
   const getChallengeStatusText = (id: string) => {
     if (activeChallenge?.id === id) {
-      if (activeChallenge.status === 'completed') return 'Completata! 🎉';
+      if (activeChallenge.status === 'completed') return 'Completata!';
       return `In Corso - Giorno ${activeChallenge.currentDay} di ${activeChallenge.durationDays}`;
     }
     return 'Non Iniziata';

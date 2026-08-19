@@ -318,7 +318,15 @@ export default function SettingsScreen({ navigation }: Props) {
                   maxLength={6}
                 />
               </View>
-              <TouchableOpacity onPress={() => { if (inviteCodeInput.length === 6) joinHousehold(inviteCodeInput); }} style={[styles.actionButton, inviteCodeInput.length !== 6 && {opacity: 0.5}]}>
+              <TouchableOpacity 
+                onPress={() => { 
+                  if (inviteCodeInput.length === 6) {
+                    joinHousehold(inviteCodeInput); 
+                    setInviteCodeInput('');
+                  }
+                }} 
+                style={[styles.actionButton, inviteCodeInput.length !== 6 && {opacity: 0.5}]}
+              >
                 <Text style={styles.actionButtonText}>Unisciti</Text>
               </TouchableOpacity>
             </View>
@@ -333,7 +341,13 @@ export default function SettingsScreen({ navigation }: Props) {
                   placeholder="Nome (es. Casa Nostra)"
                 />
               </View>
-              <TouchableOpacity onPress={() => createHousehold(householdNameInput)} style={styles.actionButton}>
+              <TouchableOpacity 
+                onPress={() => {
+                  createHousehold(householdNameInput);
+                  setHouseholdNameInput('');
+                }} 
+                style={styles.actionButton}
+              >
                 <Text style={styles.actionButtonText}>Crea</Text>
               </TouchableOpacity>
             </View>
@@ -372,7 +386,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 <View style={styles.syncTabContent}>
                   <View style={styles.previewBox}>
                     <Text style={styles.previewText}>
-                      {state.language === 'it' ? '🧹 Tzerachìa Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:\n\n' : '🧹 Tzerachìa Sync\n\nI completed some chores! Click the link to sync our app:\n\n'}
+                      {state.language === 'it' ? 'Tzerachìa Sync\n\nHo completato alcune attività in casa! Clicca il link per sincronizzare la nostra app:\n\n' : 'Tzerachìa Sync\n\nI completed some chores! Click the link to sync our app:\n\n'}
                       <Text style={{ color: '#0099FF' }}>{syncUrl.substring(0, 40)}...</Text>
                     </Text>
                   </View>

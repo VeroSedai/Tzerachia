@@ -63,7 +63,7 @@ export const scheduleDailyReminder = async (timeString: string) => {
 
     await Notifications!.scheduleNotificationAsync({
       content: {
-        title: "Tzerachìa 🧹",
+        title: "Tzerachìa",
         body: "È ora dei 15 minuti di Focus! Dai un'occhiata alle task di oggi.",
         sound: true,
       },
