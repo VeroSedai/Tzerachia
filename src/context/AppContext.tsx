@@ -157,15 +157,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const createHousehold = useCallback(async (name?: string) => {
     let currentSession = state.session;
     if (!currentSession) {
-      const { data } = await supabase.auth.signInAnonymously();
+      const { data, error } = await supabase.auth.signInAnonymously();
       if (data?.session) {
         currentSession = data.session;
         setState(prev => ({ ...prev, session: data.session }));
+      } else if (error) {
+        console.error("Supabase anonymous auth error:", error);
       }
     }
 
     if (!currentSession) {
-      Alert.alert("Errore Autenticazione", "Impossibile connettersi a Supabase per creare la casa. Verifica la connessione.");
+      Alert.alert("Errore Autenticazione", "Impossibile autenticarsi su Supabase. Verifica la connessione e la configurazione.");
       return;
     }
 
@@ -178,7 +180,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .single();
 
       if (error) {
-        console.error("Error creating household:", error);
+        console.error("Error creating household in Supabase:", error);
         Alert.alert("Errore Supabase", `Impossibile creare la casa: ${error.message}`);
         return;
       }
@@ -196,7 +198,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const newHousehold = { id: data.id, name: data.name, invite_code: data.invite_code };
         setState(prev => ({ ...prev, household: newHousehold }));
-
         fetchHousehold(currentSession.user.id);
         Alert.alert("Successo!", `Casa creata con successo! Codice invito: ${inviteCode}`);
       }
@@ -209,15 +210,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const joinHousehold = useCallback(async (inviteCode: string) => {
     let currentSession = state.session;
     if (!currentSession) {
-      const { data } = await supabase.auth.signInAnonymously();
+      const { data, error } = await supabase.auth.signInAnonymously();
       if (data?.session) {
         currentSession = data.session;
         setState(prev => ({ ...prev, session: data.session }));
+      } else if (error) {
+        console.error("Supabase anonymous auth error:", error);
       }
     }
 
     if (!currentSession) {
-      Alert.alert("Errore Autenticazione", "Impossibile connettersi a Supabase per unirti alla casa. Verifica la connessione.");
+      Alert.alert("Errore Autenticazione", "Impossibile autenticarsi su Supabase. Verifica la connessione e la configurazione.");
       return;
     }
 
