@@ -5,7 +5,7 @@
     "scheme": "tzerachia",
     "version": "1.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/iconTzerachia.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -18,7 +18,7 @@
       "package": "com.tzerachia.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/iconTzerachia.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
