@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../types';
 import { useAppContext } from '../context/AppContext';
+import { confirmAction, showAlert } from '../utils/alertUtils';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -43,25 +44,15 @@ export default function ChallengeDetailScreen({ route, navigation }: Props) {
   };
 
   const handleResetChallenge = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm("Vuoi davvero azzerare i progressi e ricominciare la sfida dal Giorno 1?")) {
-        resetActiveChallenge();
-        window.alert("La sfida è stata azzerata!");
-        navigation.navigate('MainTabs');
-      }
-      return;
-    }
-    Alert.alert(
+    confirmAction(
       "Ricomincia Sfida",
       "Vuoi davvero azzerare i progressi e ricominciare la sfida dal Giorno 1?",
-      [
-        { text: "Annulla", style: "cancel" },
-        { text: "Ricomincia", style: "destructive", onPress: () => {
-          resetActiveChallenge();
-          Alert.alert("Successo", "La sfida è stata azzerata!");
-          navigation.navigate('MainTabs');
-        }}
-      ]
+      () => {
+        resetActiveChallenge();
+        showAlert("Successo", "La sfida è stata azzerata!");
+        navigation.navigate('MainTabs');
+      },
+      "Ricomincia"
     );
   };
 

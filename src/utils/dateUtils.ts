@@ -107,6 +107,23 @@ export const formatDateForPicker = (
 };
 
 /**
+ * Formats a date string (YYYY-MM-dd) into a full uppercase display string (e.g. "LUNEDÌ 2 OTTOBRE").
+ */
+export const formatDisplayDate = (dateStr: string, language: 'it' | 'en'): string => {
+  const locale = language === 'it' ? itLocale : enLocale;
+  const dateObj = toDate(dateStr);
+  return format(dateObj, 'EEEE d MMMM', { locale }).toUpperCase();
+};
+
+/**
+ * Returns today's weekday name in the specified language (e.g. "lunedì" or "monday").
+ */
+export const getTodayWeekdayName = (language: 'it' | 'en'): string => {
+  const locale = language === 'it' ? itLocale : enLocale;
+  return format(new Date(), 'EEEE', { locale });
+};
+
+/**
  * Prunes task completions older than maxDays (default 30 days) to prevent unbounded storage growth.
  */
 export const pruneOldCompletions = (
@@ -123,3 +140,5 @@ export const pruneOldCompletions = (
   }
   return pruned;
 };
+
+

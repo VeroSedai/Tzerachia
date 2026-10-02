@@ -9,6 +9,7 @@ import TimerWidget from '../components/TimerWidget';
 import { useAppContext } from '../context/AppContext';
 import { useTimerContext } from '../context/TimerContext';
 import { t } from '../i18n';
+import { confirmAction } from '../utils/alertUtils';
 
 type RootStackParamList = {
   GuidesList: undefined;
@@ -38,42 +39,48 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
   };
 
   const normalizedSteps = React.useMemo(() => {
-    const rawSteps = type === 'guide' ? ((item as Guide).steps || (item as any).content) : (item as any).steps;
+    const rawSteps = type === 'guide'
+      ? (item as Guide).steps || (item as Guide).content
+      : (item as Recipe).steps;
     if (!rawSteps) return [];
+    const stepPrefix = t('step_prefix', state.language);
+
     if (Array.isArray(rawSteps)) {
       return rawSteps.map((s, idx) => {
-        if (typeof s === 'string') return { number: idx + 1, title: `Passaggio ${idx + 1}`, description: s };
+        if (typeof s === 'string') {
+          return { number: idx + 1, title: `${stepPrefix} ${idx + 1}`, description: s };
+        }
         return {
           number: s.number || s.step || idx + 1,
-          title: s.title || `Passaggio ${idx + 1}`,
-          description: s.description || s.text || JSON.stringify(s)
+          title: s.title || `${stepPrefix} ${idx + 1}`,
+          description: s.description || s.text || JSON.stringify(s),
         };
       });
     }
     if (typeof rawSteps === 'string') {
-      return (rawSteps as string).split('\n').filter(Boolean).map((line, idx) => ({
+      return rawSteps.split('\n').filter(Boolean).map((line, idx) => ({
         number: idx + 1,
-        title: `Passaggio ${idx + 1}`,
-        description: line
+        title: `${stepPrefix} ${idx + 1}`,
+        description: line,
       }));
     }
     return [];
-  }, [item, type]);
+  }, [item, type, state.language]);
 
   const normalizedIngredients = React.useMemo(() => {
     if (type !== 'recipe') return [];
     const rawIngredients = (item as Recipe).ingredients;
     if (!rawIngredients) return [];
     if (Array.isArray(rawIngredients)) {
-      return rawIngredients.map(i => typeof i === 'string' ? i : ((i as any).name || JSON.stringify(i)));
+      return rawIngredients.map(i => (typeof i === 'string' ? i : JSON.stringify(i)));
     }
     if (typeof rawIngredients === 'string') {
-      return (rawIngredients as string).split('\n').filter(Boolean);
+      return rawIngredients.split('\n').filter(Boolean);
     }
     return [];
   }, [item, type]);
 
-  const isCustom = (item as any).isCustom || !!(item as any).created_by || !!(item as any).household_id || item.id.startsWith('custom-');
+  const isCustom = item.isCustom || !!item.created_by || !!item.household_id || item.id.startsWith('custom-');
   const guideDuration = type === 'guide' ? (item as Guide).duration : undefined;
 
   const handleDelete = () => {
@@ -95,20 +102,12 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
       navigation.goBack();
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(t('confirm_delete', state.language))) {
-        doDelete();
-      }
-      return;
-    }
-
-    Alert.alert(
+    confirmAction(
       t('delete', state.language),
       t('confirm_delete', state.language),
-      [
-        { text: t('cancel', state.language), style: "cancel" },
-        { text: t('delete', state.language), style: "destructive", onPress: doDelete }
-      ]
+      doDelete,
+      t('delete', state.language),
+      t('cancel', state.language)
     );
   };
 

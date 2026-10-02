@@ -106,8 +106,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { fetchHousehold } = useHouseholdSync(setState);
   
   const taskActions = useTasks(state, setState);
-  const guideAndRecipeActions = useGuidesAndRecipes(setState);
-  const challengeActions = useChallenges(setState);
+  const guideAndRecipeActions = useGuidesAndRecipes(state, setState);
+  const challengeActions = useChallenges(state, setState);
 
   const syncTasks = useCallback(async (payloadString: string) => {
     const payload = importAppStatePayload(payloadString);
@@ -116,20 +116,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
     
-    setState(prev => {
-      const updatedDaily = prev.dailyTasks.map(t => payload.d.includes(t.id) ? { ...t, completed: true } : t);
-      const updatedWeekly = prev.weeklyTasks.map(t => payload.w.includes(t.id) ? { ...t, completed: true } : t);
-      const updatedMonthly = prev.monthlyTasks.map(t => payload.m.includes(t.id) ? { ...t, completed: true } : t);
-      
-      safeSetItem(DAILY_KEY, updatedDaily).catch(console.error);
-      safeSetItem(WEEKLY_KEY, updatedWeekly).catch(console.error);
-      safeSetItem(MONTHLY_KEY, updatedMonthly).catch(console.error);
-      
-      Alert.alert("Sincronizzazione Riuscita!", "Lo stato della casa è stato aggiornato.");
-      
-      return { ...prev, dailyTasks: updatedDaily, weeklyTasks: updatedWeekly, monthlyTasks: updatedMonthly };
-    });
-  }, []);
+    const updatedDaily = state.dailyTasks.map(t => payload.d.includes(t.id) ? { ...t, completed: true } : t);
+    const updatedWeekly = state.weeklyTasks.map(t => payload.w.includes(t.id) ? { ...t, completed: true } : t);
+    const updatedMonthly = state.monthlyTasks.map(t => payload.m.includes(t.id) ? { ...t, completed: true } : t);
+
+    // Pure React state update
+    setState(prev => ({
+      ...prev,
+      dailyTasks: updatedDaily,
+      weeklyTasks: updatedWeekly,
+      monthlyTasks: updatedMonthly,
+    }));
+
+    // Async storage writes outside setState
+    try {
+      await Promise.all([
+        safeSetItem(DAILY_KEY, updatedDaily),
+        safeSetItem(WEEKLY_KEY, updatedWeekly),
+        safeSetItem(MONTHLY_KEY, updatedMonthly),
+      ]);
+      Alert.alert('Sincronizzazione Riuscita!', 'Lo stato della casa è stato aggiornato.');
+    } catch (err) {
+      console.error('[AppContext] Error persisting synced tasks:', err);
+    }
+  }, [state.dailyTasks, state.weeklyTasks, state.monthlyTasks]);
 
   useEffect(() => {
     const handleUrl = (event: Linking.EventType) => {

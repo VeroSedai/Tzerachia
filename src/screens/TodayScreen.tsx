@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -6,24 +6,113 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import TimerWidget from '../components/TimerWidget';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
-import { getTodayStr, getLastNDays, formatDateForPicker } from '../utils/dateUtils';
+import {
+  getTodayStr,
+  getLastNDays,
+  formatDateForPicker,
+  formatDisplayDate,
+  getTodayWeekdayName,
+} from '../utils/dateUtils';
 
 interface Props {
   navigation: NativeStackNavigationProp<any, any>;
 }
 
+interface DailyTaskItemProps {
+  id: string;
+  title: string;
+  completed: boolean;
+  onToggle: (id: string) => void;
+}
+
+/**
+ * Memoized daily task row item.
+ */
+const DailyTaskItem = React.memo(function DailyTaskItem({
+  id,
+  title,
+  completed,
+  onToggle,
+}: DailyTaskItemProps) {
+  const handlePress = useCallback(() => {
+    onToggle(id);
+  }, [id, onToggle]);
+
+  return (
+    <TouchableOpacity
+      style={styles.taskCard}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.checkbox, completed && styles.checkboxCompleted]}>
+        {completed && <Feather name="check" size={14} color="#FFFFFF" />}
+      </View>
+      <Text style={[styles.taskTitle, completed && styles.taskTitleCompleted]}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
+interface CustomTaskItemProps {
+  id: string;
+  title: string;
+  completed: boolean;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+/**
+ * Memoized user-created custom task item.
+ */
+const CustomTaskItem = React.memo(function CustomTaskItem({
+  id,
+  title,
+  completed,
+  onToggle,
+  onDelete,
+}: CustomTaskItemProps) {
+  const handleToggle = useCallback(() => {
+    onToggle(id);
+  }, [id, onToggle]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(id);
+  }, [id, onDelete]);
+
+  return (
+    <View style={styles.taskCard}>
+      <TouchableOpacity
+        style={styles.customTaskContent}
+        onPress={handleToggle}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.checkbox, completed && styles.checkboxCompleted]}>
+          {completed && <Feather name="check" size={14} color="#FFFFFF" />}
+        </View>
+        <Text style={[styles.taskTitle, completed && styles.taskTitleCompleted]}>
+          {title} <Text style={styles.extraTag}>(Extra)</Text>
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+        <Feather name="trash-2" size={18} color="#FF6B6B" />
+      </TouchableOpacity>
+    </View>
+  );
+});
+
 export default function TodayScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { 
-    state, 
-    toggleTask, 
-    postponeTaskToFriday, 
-    addCustomTask, 
-    toggleCustomTask, 
+  const {
+    state,
+    toggleTask,
+    postponeTaskToFriday,
+    addCustomTask,
+    toggleCustomTask,
     deleteCustomTask,
-    setSelectedDate 
+    setSelectedDate,
   } = useAppContext();
-  
+
   const [newCustomTask, setNewCustomTask] = useState('');
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
@@ -32,34 +121,69 @@ export default function TodayScreen({ navigation }: Props) {
   const selectedDate = state.selectedDate || todayStr;
   const isTodaySelected = selectedDate === todayStr;
 
-  const past15Days = getLastNDays(15);
-  
-  const formatter = new Intl.DateTimeFormat(state.language === 'it' ? 'it-IT' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
-  const dateString = formatter.format(new Date(selectedDate + 'T00:00:00')).toUpperCase();
-  const dayName = new Intl.DateTimeFormat('it-IT', { weekday: 'long' }).format(new Date());
+  const past15Days = useMemo(() => getLastNDays(15), [todayStr]);
 
-  const focusTask = state.weeklyTasks.find(t => t.dayOfWeek?.toLowerCase() === dayName.toLowerCase());
+  const dateString = useMemo(
+    () => formatDisplayDate(selectedDate, state.language),
+    [selectedDate, state.language]
+  );
+
+  // Italian weekday name for querying weeklyTasks (which uses Italian day names as keys)
+  const itDayName = useMemo(() => getTodayWeekdayName('it'), []);
+  // Weekday name formatted for display according to active user language
+  const displayDayName = useMemo(
+    () => getTodayWeekdayName(state.language).toUpperCase(),
+    [state.language]
+  );
+
+  const focusTask = useMemo(() => {
+    return state.weeklyTasks.find(
+      t => t.dayOfWeek?.toLowerCase() === itDayName.toLowerCase()
+    );
+  }, [state.weeklyTasks, itDayName]);
 
   // Derive daily task completions for the selected date
-  const selectedDateCompletedIds = isTodaySelected
-    ? state.dailyTasks.filter(t => t.completed).map(t => t.id)
-    : (state.dailyTasksCompletionsByDate[selectedDate] || []);
+  const selectedDateCompletedIds = useMemo(() => {
+    return isTodaySelected
+      ? state.dailyTasks.filter(t => t.completed).map(t => t.id)
+      : state.dailyTasksCompletionsByDate[selectedDate] || [];
+  }, [isTodaySelected, state.dailyTasks, state.dailyTasksCompletionsByDate, selectedDate]);
 
-  const completedDailyTasksCount = state.dailyTasks.filter(t => selectedDateCompletedIds.includes(t.id)).length;
-  const todaysCustomTasks = state.customTasks.filter(t => t.date === selectedDate);
+  const completedDailyTasksCount = useMemo(() => {
+    return state.dailyTasks.filter(t => selectedDateCompletedIds.includes(t.id)).length;
+  }, [state.dailyTasks, selectedDateCompletedIds]);
 
-  const handleAddCustomTask = () => {
+  const todaysCustomTasks = useMemo(() => {
+    return state.customTasks.filter(t => t.date === selectedDate);
+  }, [state.customTasks, selectedDate]);
+
+  const handleToggleTask = useCallback((id: string) => {
+    toggleTask(id);
+  }, [toggleTask]);
+
+  const handleToggleCustomTask = useCallback((id: string) => {
+    toggleCustomTask(id);
+  }, [toggleCustomTask]);
+
+  const handleDeleteCustomTask = useCallback((id: string) => {
+    deleteCustomTask(id);
+  }, [deleteCustomTask]);
+
+  const handlePostponeFocusTask = useCallback((id: string) => {
+    postponeTaskToFriday(id);
+  }, [postponeTaskToFriday]);
+
+  const handleAddCustomTask = useCallback(() => {
     if (newCustomTask.trim()) {
       addCustomTask(newCustomTask.trim(), selectedDate);
       setNewCustomTask('');
       setIsAddingCustom(false);
     }
-  };
+  }, [newCustomTask, addCustomTask, selectedDate]);
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
       <ScrollView contentContainerStyle={styles.container}>
-        
         {/* Custom Header */}
         <View style={styles.header}>
           <View style={styles.logoRow}>
@@ -68,15 +192,22 @@ export default function TodayScreen({ navigation }: Props) {
             </View>
             <Text style={styles.appName}>Tzerachìa</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity 
+          <View style={styles.headerActions}>
+            <TouchableOpacity
               onPress={() => setShowHistoryPicker(prev => !prev)}
               style={[styles.headerIconBtn, (showHistoryPicker || !isTodaySelected) && styles.headerIconBtnActive]}
               activeOpacity={0.7}
             >
-              <Ionicons name="calendar-outline" size={18} color={(showHistoryPicker || !isTodaySelected) ? '#FFFFFF' : '#5A6B6B'} />
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color={showHistoryPicker || !isTodaySelected ? '#FFFFFF' : '#5A6B6B'}
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.headerIconBtn}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.headerIconBtn}
+            >
               <Ionicons name="settings-outline" size={20} color="#5A6B6B" />
             </TouchableOpacity>
           </View>
@@ -87,11 +218,11 @@ export default function TodayScreen({ navigation }: Props) {
           <Text style={styles.dateText}>{dateString}</Text>
         )}
 
-        {/* 15-Day Date Selector Bar (shown when history button toggled or when browsing past dates) */}
+        {/* 15-Day Date Selector Bar */}
         {(showHistoryPicker || !isTodaySelected) && (
           <View style={styles.datePickerContainer}>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.datePickerScroll}
             >
@@ -121,7 +252,7 @@ export default function TodayScreen({ navigation }: Props) {
 
         {/* Selected Date Header Banner if historical */}
         {!isTodaySelected && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.historyBanner}
             onPress={() => setSelectedDate(todayStr)}
           >
@@ -140,143 +271,159 @@ export default function TodayScreen({ navigation }: Props) {
         {/* Daily Tasks */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('daily_tasks', state.language)}</Text>
-          <Text style={styles.sectionSubtitle}>{5 - completedDailyTasksCount} {t('tasks_to_complete', state.language)}</Text>
+          <Text style={styles.sectionSubtitle}>
+            {5 - completedDailyTasksCount} {t('tasks_to_complete', state.language)}
+          </Text>
         </View>
 
         <View style={styles.tasksList}>
           {state.dailyTasks.map(task => {
             const isCompleted = selectedDateCompletedIds.includes(task.id);
             return (
-              <TouchableOpacity 
-                key={task.id} 
-                style={styles.taskCard} 
-                onPress={() => toggleTask(task.id)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, isCompleted && styles.checkboxCompleted]}>
-                  {isCompleted && <Feather name="check" size={14} color="#FFFFFF" />}
-                </View>
-                <Text style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted]}>
-                  {task.title}
-                </Text>
-              </TouchableOpacity>
+              <DailyTaskItem
+                key={task.id}
+                id={task.id}
+                title={task.title}
+                completed={isCompleted}
+                onToggle={handleToggleTask}
+              />
             );
           })}
           {todaysCustomTasks.map(task => (
-            <View key={task.id} style={styles.taskCard}>
-              <TouchableOpacity 
-                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-                onPress={() => toggleCustomTask(task.id)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, task.completed && styles.checkboxCompleted]}>
-                  {task.completed && <Feather name="check" size={14} color="#FFFFFF" />}
-                </View>
-                <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
-                  {task.title} <Text style={{ fontSize: 12, color: '#8A7B66' }}>(Extra)</Text>
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => deleteCustomTask(task.id)} style={{ padding: 4 }}>
-                <Feather name="trash-2" size={18} color="#FF6B6B" />
-              </TouchableOpacity>
-            </View>
+            <CustomTaskItem
+              key={task.id}
+              id={task.id}
+              title={task.title}
+              completed={task.completed}
+              onToggle={handleToggleCustomTask}
+              onDelete={handleDeleteCustomTask}
+            />
           ))}
         </View>
 
         {isAddingCustom ? (
-          <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.customInputRow}>
             <TextInput
-              style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D0E3E3', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
+              style={styles.customTextInput}
               placeholder={t('new_extra_placeholder', state.language)}
               value={newCustomTask}
               onChangeText={setNewCustomTask}
               onSubmitEditing={handleAddCustomTask}
               autoFocus
             />
-            <TouchableOpacity onPress={handleAddCustomTask} style={{ backgroundColor: '#00A3A1', padding: 12, borderRadius: 16 }}>
+            <TouchableOpacity onPress={handleAddCustomTask} style={styles.confirmCustomBtn}>
               <Feather name="check" size={16} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsAddingCustom(false)} style={{ backgroundColor: '#F0F4F4', padding: 12, borderRadius: 16, marginLeft: 8 }}>
+            <TouchableOpacity onPress={() => setIsAddingCustom(false)} style={styles.cancelCustomBtn}>
               <Feather name="x" size={16} color="#5A6B6B" />
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }} onPress={() => setIsAddingCustom(true)}>
+          <TouchableOpacity
+            style={styles.addCustomBtn}
+            onPress={() => setIsAddingCustom(true)}
+          >
             <Feather name="plus" size={16} color="#00A3A1" />
-            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>{t('add_task_btn', state.language)}</Text>
+            <Text style={styles.addCustomBtnText}>{t('add_task_btn', state.language)}</Text>
           </TouchableOpacity>
         )}
 
         {/* Focus del Giorno (Show on Today) */}
         {isTodaySelected && (
           <>
-            <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>{t('weekly_focus', state.language)}</Text>
-            
+            <Text style={[styles.sectionTitle, styles.focusSectionTitle]}>
+              {t('weekly_focus', state.language)}
+            </Text>
+
             <View style={styles.focusCard}>
               <View style={styles.focusHeader}>
                 <Ionicons name="sparkles-outline" size={16} color="#8A7B66" />
-                <Text style={styles.focusDayName}>{dayName.toUpperCase()}</Text>
+                <Text style={styles.focusDayName}>{displayDayName}</Text>
               </View>
               {focusTask && !focusTask.postponed ? (
-                <TouchableOpacity 
-                  style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
-                  onPress={() => toggleTask(focusTask.id)}
+                <TouchableOpacity
+                  style={styles.focusTaskRow}
+                  onPress={() => handleToggleTask(focusTask.id)}
                   activeOpacity={0.7}
                 >
-                  <View style={[
-                    { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#C0B3A0', marginRight: 12, justifyContent: 'center', alignItems: 'center' },
-                    focusTask.completed && { backgroundColor: '#00A3A1', borderColor: '#00A3A1' }
-                  ]}>
+                  <View
+                    style={[
+                      styles.focusCheckbox,
+                      focusTask.completed && styles.focusCheckboxCompleted,
+                    ]}
+                  >
                     {focusTask.completed && <Feather name="check" size={14} color="#FFFFFF" />}
                   </View>
-                  <Text style={[styles.focusTitle, focusTask.completed && { textDecorationLine: 'line-through', color: '#8A9A9A' }]}>
+                  <Text
+                    style={[
+                      styles.focusTitle,
+                      focusTask.completed && styles.focusTitleCompleted,
+                    ]}
+                  >
                     {focusTask.title}
                   </Text>
                   {focusTask.completed && (
-                    <View style={{ backgroundColor: '#E0F0F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginLeft: 12 }}>
-                      <Text style={{ color: '#00A3A1', fontSize: 10, fontWeight: 'bold' }}>{t('completed', state.language)}</Text>
+                    <View style={styles.completedBadge}>
+                      <Text style={styles.completedBadgeText}>
+                        {t('completed', state.language)}
+                      </Text>
                     </View>
                   )}
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.focusTitle}>{focusTask ? focusTask.title : t('no_tasks_today', state.language)}</Text>
+                <Text style={styles.focusTitle}>
+                  {focusTask ? focusTask.title : t('no_tasks_today', state.language)}
+                </Text>
               )}
 
               <Text style={styles.focusDescription}>
-                {focusTask ? (
-                  focusTask.completed 
+                {focusTask
+                  ? focusTask.completed
                     ? t('focus_completed_msg', state.language)
                     : t('focus_in_progress_msg', state.language)
-                ) : t('rest_day_msg', state.language)}
+                  : t('rest_day_msg', state.language)}
               </Text>
 
               {focusTask && (
                 <View>
                   {focusTask.postponed ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAEAEA', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20, marginTop: 12 }}>
+                    <View style={styles.postponedBadgeContainer}>
                       <Ionicons name="calendar-outline" size={14} color="#5A6B6B" />
-                      <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '500', marginLeft: 8 }}>{t('postponed', state.language)}</Text>
+                      <Text style={styles.postponedBadgeText}>
+                        {t('postponed', state.language)}
+                      </Text>
                     </View>
                   ) : (
                     <>
-                      <TouchableOpacity 
-                        style={styles.guideCard} 
+                      <TouchableOpacity
+                        style={styles.guideCard}
                         onPress={() => navigation.navigate('GuidesStack')}
                       >
                         <View style={styles.guideCheckbox} />
-                        <Text style={styles.guideText}>{t('open_guide_prefix', state.language)} {focusTask.title}</Text>
-                        <Ionicons name="chevron-forward" size={16} color="#8A7B66" style={{ marginLeft: 'auto' }} />
+                        <Text style={styles.guideText}>
+                          {t('open_guide_prefix', state.language)} {focusTask.title}
+                        </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#8A7B66"
+                          style={{ marginLeft: 'auto' }}
+                        />
                       </TouchableOpacity>
-                      
-                      {!focusTask.completed && focusTask.dayOfWeek?.toLowerCase() !== 'venerdì' && focusTask.dayOfWeek?.toLowerCase() !== 'domenica' && (
-                        <TouchableOpacity 
-                          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingVertical: 10, backgroundColor: '#F0F4F4', borderRadius: 16, borderWidth: 1, borderColor: '#E0EAE9' }}
-                          onPress={() => postponeTaskToFriday(focusTask.id)}
-                        >
-                          <Ionicons name="time-outline" size={16} color="#5A6B6B" />
-                          <Text style={{ fontSize: 14, color: '#5A6B6B', fontWeight: '600', marginLeft: 6 }}>{t('postpone_to_friday', state.language)}</Text>
-                        </TouchableOpacity>
-                      )}
+
+                      {!focusTask.completed &&
+                        focusTask.dayOfWeek?.toLowerCase() !== 'venerdì' &&
+                        focusTask.dayOfWeek?.toLowerCase() !== 'domenica' && (
+                          <TouchableOpacity
+                            style={styles.postponeButton}
+                            onPress={() => handlePostponeFocusTask(focusTask.id)}
+                          >
+                            <Ionicons name="time-outline" size={16} color="#5A6B6B" />
+                            <Text style={styles.postponeButtonText}>
+                              {t('postpone_to_friday', state.language)}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                     </>
                   )}
                 </View>
@@ -284,7 +431,6 @@ export default function TodayScreen({ navigation }: Props) {
             </View>
           </>
         )}
-
       </ScrollView>
     </View>
   );
@@ -327,6 +473,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1A2F2F',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   datePickerContainer: {
     marginBottom: 16,
@@ -467,6 +618,59 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#8E8E93',
   },
+  customTaskContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  extraTag: {
+    fontSize: 12,
+    color: '#8A7B66',
+  },
+  deleteButton: {
+    padding: 4,
+  },
+  customInputRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  customTextInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0E3E3',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+  },
+  confirmCustomBtn: {
+    backgroundColor: '#00A3A1',
+    padding: 12,
+    borderRadius: 16,
+  },
+  cancelCustomBtn: {
+    backgroundColor: '#F0F4F4',
+    padding: 12,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  addCustomBtn: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  addCustomBtnText: {
+    marginLeft: 6,
+    color: '#00A3A1',
+    fontWeight: '600',
+  },
+  focusSectionTitle: {
+    marginTop: 24,
+    marginBottom: 12,
+  },
   focusCard: {
     backgroundColor: '#F3E8D6',
     borderRadius: 20,
@@ -484,17 +688,67 @@ const styles = StyleSheet.create({
     color: '#8A7B66',
     letterSpacing: 0.5,
   },
+  focusTaskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  focusCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#C0B3A0',
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  focusCheckboxCompleted: {
+    backgroundColor: '#00A3A1',
+    borderColor: '#00A3A1',
+  },
   focusTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#3A2E1A',
     marginBottom: 6,
   },
+  focusTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#8A9A9A',
+  },
+  completedBadge: {
+    backgroundColor: '#E0F0F0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginLeft: 12,
+  },
+  completedBadgeText: {
+    color: '#00A3A1',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
   focusDescription: {
     fontSize: 14,
     color: '#5C4E3A',
     lineHeight: 20,
     marginBottom: 16,
+  },
+  postponedBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EAEAEA',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 12,
+  },
+  postponedBadgeText: {
+    fontSize: 14,
+    color: '#5A6B6B',
+    fontWeight: '500',
+    marginLeft: 8,
   },
   guideCard: {
     flexDirection: 'row',
@@ -519,4 +773,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1A2F2F',
   },
+  postponeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 10,
+    backgroundColor: '#F0F4F4',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E0EAE9',
+  },
+  postponeButtonText: {
+    fontSize: 14,
+    color: '#5A6B6B',
+    fontWeight: '600',
+    marginLeft: 6,
+  },
 });
+

@@ -106,7 +106,9 @@ export const dictionary = {
     add_guide: 'Aggiungi',
     start_guided_session: 'Avvia sessione guidata',
     procedure: 'Procedura',
+    step_prefix: 'Passaggio',
     ingredients: 'Ingredienti',
+    diy_recipe: 'Ricetta fai-da-te',
     confirm_delete: 'Sei sicuro di voler eliminare questo elemento?',
 
     // Challenges
@@ -225,7 +227,9 @@ export const dictionary = {
     add_guide: 'Add',
     start_guided_session: 'Start Guided Session',
     procedure: 'Procedure',
+    step_prefix: 'Step',
     ingredients: 'Ingredients',
+    diy_recipe: 'DIY Recipe',
     confirm_delete: 'Are you sure you want to delete this item?',
 
     // Challenges

@@ -10,6 +10,7 @@ import { t } from '../i18n';
 import { RootStackParamList } from '../types';
 import { requestNotificationPermissions, scheduleDailyReminder, cancelAllReminders } from '../services/notificationService';
 import { exportAppStatePayload, shareToTelegram } from '../utils/syncUtils';
+import { confirmAction, showAlert } from '../utils/alertUtils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -60,87 +61,51 @@ export default function SettingsScreen({ navigation }: Props) {
   };
 
   const handleResetDaily = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm("Vuoi davvero resettare le 5 task giornaliere di oggi?")) {
-        resetDailyTasks();
-        window.alert("Daily tasks resettate.");
-      }
-      return;
-    }
-    Alert.alert(
+    confirmAction(
       "Resetta Daily Tasks",
       "Vuoi davvero resettare le 5 task giornaliere di oggi?",
-      [
-        { text: "Annulla", style: "cancel" },
-        { text: "Resetta", style: "destructive", onPress: () => {
-          resetDailyTasks();
-          Alert.alert("Successo", "Daily tasks resettate.");
-        }}
-      ]
+      () => {
+        resetDailyTasks();
+        showAlert("Successo", "Daily tasks resettate.");
+      },
+      "Resetta"
     );
   };
 
   const handleResetChallenge = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm("Vuoi cancellare i progressi della tua sfida attuale? Questa operazione è irreversibile.")) {
-        resetActiveChallenge();
-        window.alert("Sfida annullata.");
-      }
-      return;
-    }
-    Alert.alert(
+    confirmAction(
       "Resetta Sfida Attiva",
       "Vuoi cancellare i progressi della tua sfida attuale? Questa operazione è irreversibile.",
-      [
-        { text: "Annulla", style: "cancel" },
-        { text: "Resetta", style: "destructive", onPress: () => {
-          resetActiveChallenge();
-          Alert.alert("Successo", "Sfida annullata.");
-        }}
-      ]
+      () => {
+        resetActiveChallenge();
+        showAlert("Successo", "Sfida annullata.");
+      },
+      "Resetta"
     );
   };
 
   const handleFactoryReset = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm("ATTENZIONE: Questa operazione eliminerà tutti i dati salvati, inclusi i progressi, le sfide e le guide personalizzate. Vuoi continuare?")) {
-        factoryReset();
-        window.alert("L'app è stata riportata alle impostazioni di fabbrica.");
-        navigation.navigate('MainTabs');
-      }
-      return;
-    }
-    Alert.alert(
+    confirmAction(
       "Ripristina Impostazioni di Fabbrica",
       "ATTENZIONE: Questa operazione eliminerà tutti i dati salvati, inclusi i progressi, le sfide e le guide personalizzate. Vuoi continuare?",
-      [
-        { text: "Annulla", style: "cancel" },
-        { text: "Ripristina Tutto", style: "destructive", onPress: () => {
-          factoryReset();
-          Alert.alert("Successo", "L'app è stata riportata alle impostazioni di fabbrica.");
-          navigation.navigate('MainTabs');
-        }}
-      ]
+      () => {
+        factoryReset();
+        showAlert("Successo", "L'app è stata riportata alle impostazioni di fabbrica.");
+        navigation.navigate('MainTabs');
+      },
+      "Ripristina Tutto"
     );
   };
 
   const handleLeaveHousehold = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm("Sei sicuro di voler lasciare questa casa? Perderai l'accesso condiviso.")) {
-        leaveHousehold();
-        window.alert("Hai lasciato la casa.");
-      }
-      return;
-    }
-    Alert.alert(
+    confirmAction(
       "Lascia / Elimina Casa",
       "Sei sicuro di voler lasciare questa casa? Perderai l'accesso condiviso.",
-      [
-        { text: "Annulla", style: "cancel" },
-        { text: "Lascia", style: "destructive", onPress: () => {
-          leaveHousehold();
-        }}
-      ]
+      () => {
+        leaveHousehold();
+        showAlert("Successo", "Hai lasciato la casa.");
+      },
+      "Lascia"
     );
   };
 

@@ -8,7 +8,10 @@ interface TaskItemProps {
   onToggle: () => void;
 }
 
-export default function TaskItem({ title, completed, onToggle }: TaskItemProps) {
+/**
+ * Memoized single task item with animated checkbox and title styling.
+ */
+function TaskItemComponent({ title, completed, onToggle }: TaskItemProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={onToggle} activeOpacity={0.7}>
       <View style={[styles.checkbox, completed && styles.checkboxChecked]}>
@@ -18,6 +21,8 @@ export default function TaskItem({ title, completed, onToggle }: TaskItemProps) 
     </TouchableOpacity>
   );
 }
+
+export default React.memo(TaskItemComponent);
 
 const styles = StyleSheet.create({
   container: {
@@ -39,17 +44,12 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: '#7A9A8B',
   },
-  checkmark: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   title: {
     fontSize: 16,
-    color: '#2C3E35', // Dark Charcoal
+    color: '#2C3E35',
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#A8C3C8', // Sky Blue for completed text
+    color: '#A8C3C8',
   },
 });

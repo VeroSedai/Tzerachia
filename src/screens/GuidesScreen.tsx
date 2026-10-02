@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
+import { Recipe, Guide } from '../types';
 import { guides as defaultGuides, recipes as defaultRecipes } from '../data/guidesAndRecipes';
 
 const DEFAULT_CATEGORIES = [
@@ -19,22 +20,43 @@ interface Props {
   navigation: NativeStackNavigationProp<any, any>;
 }
 
-const GuideItem = React.memo(({ item, type, navigation }: any) => (
-  <TouchableOpacity 
-    style={styles.card}
-    onPress={() => navigation.navigate('GuideDetail', { item, type })}
-  >
-    <View style={styles.cardContent}>
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      {type === 'recipe' ? (
-        <Text style={styles.cardSubtitle}>Aceto & Olii essenziali</Text>
-      ) : item.duration ? (
-        <Text style={styles.cardSubtitle}>{item.duration}</Text>
-      ) : null}
-    </View>
-    <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
-  </TouchableOpacity>
-));
+interface GuideItemProps {
+  item: Recipe | Guide;
+  type: 'recipe' | 'guide';
+  language: 'it' | 'en';
+  navigation: NativeStackNavigationProp<any, any>;
+}
+
+const GuideItem = React.memo(({ item, type, language, navigation }: GuideItemProps) => {
+  const subtitle = useMemo(() => {
+    if (type === 'recipe') {
+      const recipe = item as Recipe;
+      return recipe.category || t('diy_recipe', language);
+    }
+    const guide = item as Guide;
+    return guide.duration || guide.category || null;
+  }, [item, type, language]);
+
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('GuideDetail', { item, type })}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
+    </TouchableOpacity>
+  );
+});
+
+interface GuideSection {
+  title: string;
+  data: (Recipe | Guide)[];
+  type: 'recipe' | 'guide';
+}
 
 export default function GuidesScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -47,7 +69,7 @@ export default function GuidesScreen({ navigation }: Props) {
     ...state.customCategories.map(c => ({ label: c, icon: 'folder' }))
   ], [state.customCategories]);
 
-  const sections = useMemo(() => {
+  const sections: GuideSection[] = useMemo(() => {
     const allRecipes = [...defaultRecipes, ...state.customRecipes];
     const allGuides = [...defaultGuides, ...state.customGuides];
     
@@ -61,7 +83,7 @@ export default function GuidesScreen({ navigation }: Props) {
       (!activeCategory || g.category === activeCategory)
     );
 
-    const result = [];
+    const result: GuideSection[] = [];
     if (filteredGuides.length > 0) {
       result.push({ title: t('cleaning_guides', state.language).toUpperCase(), data: filteredGuides, type: 'guide' });
     }
@@ -71,17 +93,17 @@ export default function GuidesScreen({ navigation }: Props) {
     return result;
   }, [state.customRecipes, state.customGuides, searchQuery, activeCategory, state.language]);
 
-  const renderItem = useCallback(({ item, section }: any) => {
-    return <GuideItem item={item} type={section.type} navigation={navigation} />;
-  }, [navigation]);
+  const renderItem = useCallback(({ item, section }: { item: Recipe | Guide; section: GuideSection }) => {
+    return <GuideItem item={item} type={section.type} language={state.language} navigation={navigation} />;
+  }, [navigation, state.language]);
 
-  const renderSectionHeader = useCallback(({ section: { title } }: any) => (
-    <Text style={[styles.sectionTitle, { marginTop: title.includes('RICETTE') ? 24 : 0 }]}>{title}</Text>
+  const renderSectionHeader = useCallback(({ section }: { section: GuideSection }) => (
+    <Text style={[styles.sectionTitle, { marginTop: section.type === 'recipe' ? 24 : 0 }]}>{section.title}</Text>
   ), []);
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top || 40, paddingBottom: insets.bottom || 20 }]}>
-      <SectionList<any, any>
+      <SectionList<Recipe | Guide, GuideSection>
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 80 }}
         sections={sections}

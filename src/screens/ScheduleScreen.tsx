@@ -6,6 +6,9 @@ import { useAppContext } from '../context/AppContext';
 import { t } from '../i18n';
 import { guides as defaultGuides } from '../data/guidesAndRecipes';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { format, addDays } from 'date-fns';
+import { confirmAction } from '../utils/alertUtils';
+import { Task } from '../types';
 
 const DAYS = [
   { short: 'LUN', key: 'Lunedì' },
@@ -21,8 +24,29 @@ interface Props {
   navigation: NativeStackNavigationProp<any, any>;
 }
 
+interface ScheduleTaskItemData {
+  id: string;
+  taskName: string;
+  completed: boolean;
+  day: string;
+  postponed?: boolean;
+}
+
+interface ScheduleTaskItemProps {
+  item: ScheduleTaskItemData;
+  dayInfo: { short: string; key: string };
+  isSunday: boolean;
+  isCatchAllDay: boolean;
+  pastMissedTasks: Task[];
+  language: 'it' | 'en';
+  toggleTask: (taskId: string) => void;
+  postponeTaskToFriday: (taskId: string) => void;
+}
+
+const ItemSeparator = () => <View style={{ height: 16 }} />;
+
 // Memoized Task Item Component
-const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMissedTasks, language, toggleTask, postponeTaskToFriday }: any) => {
+const TaskItem = React.memo(({ item, dayInfo, isSunday, isCatchAllDay, pastMissedTasks, language, toggleTask, postponeTaskToFriday }: ScheduleTaskItemProps) => {
   return (
     <View style={styles.card}>
       <TouchableOpacity 
@@ -104,11 +128,7 @@ export default function ScheduleScreen({ navigation }: Props) {
   const [addingForDay, setAddingForDay] = useState<number | null>(null);
 
   const getDateForDayIndex = (dayIndex: number) => {
-    const today = new Date();
-    const diff = dayIndex - currentDayIndex;
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + diff);
-    return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
+    return format(addDays(new Date(), dayIndex - currentDayIndex), 'yyyy-MM-dd');
   };
 
   const handleAddCustomTask = (dayIndex: number) => {
@@ -317,16 +337,18 @@ export default function ScheduleScreen({ navigation }: Props) {
         <View style={styles.monthlyContainer}>
           <View style={styles.monthlyHeader}>
             <Text style={styles.monthlyTitle}>{t('monthly_tasks', state.language)}</Text>
-            <TouchableOpacity onPress={() => {
-              if (window.confirm) {
-                if (window.confirm(t('reset_monthly_confirm', state.language))) resetMonthlyTasks();
-              } else {
-                Alert.alert(t('reset_monthly', state.language), t('reset_monthly_confirm', state.language), [
-                  { text: t('cancel', state.language), style: "cancel" },
-                  { text: t('reset', state.language), style: "destructive", onPress: resetMonthlyTasks }
-                ]);
-              }
-            }} style={styles.resetButton}>
+            <TouchableOpacity 
+              onPress={() => {
+                confirmAction(
+                  t('reset_monthly', state.language),
+                  t('reset_monthly_confirm', state.language),
+                  resetMonthlyTasks,
+                  t('reset', state.language),
+                  t('cancel', state.language)
+                );
+              }} 
+              style={styles.resetButton}
+            >
               <Feather name="rotate-ccw" size={14} color="#8A7B66" />
               <Text style={styles.resetButtonText}>{t('reset', state.language)}</Text>
             </TouchableOpacity>
@@ -347,7 +369,7 @@ export default function ScheduleScreen({ navigation }: Props) {
         renderItem={viewMode === 'weekly' ? renderWeeklyItem : renderMonthlyItem}
         ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        ItemSeparatorComponent={ItemSeparator}
       />
     </View>
   );

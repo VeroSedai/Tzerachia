@@ -8,6 +8,7 @@ import ScheduleScreen from '../screens/ScheduleScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditScheduleModal from '../screens/EditScheduleModal';
 import ChallengesScreen from '../screens/ChallengesScreen';
+import ChallengeDetailScreen from '../screens/ChallengeDetailScreen';
 import GuidesScreen from '../screens/GuidesScreen';
 import GuideDetailScreen from '../screens/GuideDetailScreen';
 import AddGuideScreen from '../screens/AddGuideScreen';
@@ -32,8 +33,6 @@ function GuidesStack() {
   );
 }
 
-import ChallengeDetailScreen from '../screens/ChallengeDetailScreen';
-
 function ChallengesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -50,9 +49,9 @@ function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false, // Custom headers in screens
-        tabBarActiveTintColor: '#00A3A1', // Teal
-        tabBarInactiveTintColor: '#8E8E93', // Gray
+        headerShown: false,
+        tabBarActiveTintColor: '#00A3A1',
+        tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
@@ -64,7 +63,7 @@ function TabNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
 
-          if (route.name === 'Today') {
+          if (route.name === 'Oggi' || route.name === 'Today') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';

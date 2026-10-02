@@ -50,12 +50,19 @@ export interface Recipe {
   id: string;
   title: string;
   category?: string;
-  ingredients: string[];
+  ingredients: string[] | string;
+  steps?: (GuideStep | string)[] | string;
+  isCustom?: boolean;
+  created_by?: string;
+  household_id?: string;
 }
 
 export interface GuideStep {
-  step: number;
+  step?: number;
+  number?: number;
+  title?: string;
   description: string;
+  text?: string;
 }
 
 export interface Guide {
@@ -63,8 +70,13 @@ export interface Guide {
   title: string;
   category?: string;
   duration?: string;
-  steps: GuideStep[];
+  steps?: (GuideStep | string)[] | string;
+  content?: string;
+  isCustom?: boolean;
+  created_by?: string;
+  household_id?: string;
 }
+
 
 export interface Household {
   id: string;
