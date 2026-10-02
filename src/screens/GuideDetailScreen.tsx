@@ -7,6 +7,7 @@ import { Recipe, Guide } from '../types';
 import TaskItem from '../components/TaskItem';
 import TimerWidget from '../components/TimerWidget';
 import { useAppContext } from '../context/AppContext';
+import { useTimerContext } from '../context/TimerContext';
 import { t } from '../i18n';
 
 type RootStackParamList = {
@@ -18,7 +19,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GuideDetail'>;
 
 export default function GuideDetailScreen({ route, navigation }: Props) {
   const { item, type } = route.params;
-  const { toggleTimerActive, state, deleteCustomGuide, deleteCustomRecipe, deleteCustomCategory } = useAppContext();
+  const { state, deleteCustomGuide, deleteCustomRecipe, deleteCustomCategory } = useAppContext();
+  const { timerActive, toggleTimerActive } = useTimerContext();
   
   // Local state for checking off ingredients or steps
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -30,7 +32,7 @@ export default function GuideDetailScreen({ route, navigation }: Props) {
 
   const startSession = () => {
     setSessionActive(true);
-    if (!state.timerActive) {
+    if (!timerActive) {
       toggleTimerActive();
     }
   };

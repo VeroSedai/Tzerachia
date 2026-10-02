@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tzerachia.app"
+      "bundleIdentifier": "com.tzerachia.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.tzerachia.app",
@@ -20,7 +23,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "CAMERA",
-        "VIBRATE"
+        "VIBRATE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {

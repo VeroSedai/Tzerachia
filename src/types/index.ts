@@ -83,8 +83,6 @@ export interface AppState {
   weeklyTasks: Task[];
   monthlyTasks: Task[];
   activeChallenge: Challenge | null;
-  timerDuration: number;
-  timerActive: boolean;
   customGuides: Guide[];
   customRecipes: Recipe[];
   customCategories: string[];

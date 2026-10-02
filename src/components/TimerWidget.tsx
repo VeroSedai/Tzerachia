@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { useTimerContext } from '../context/TimerContext';
 import { t } from '../i18n';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -9,13 +10,14 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 export default function TimerWidget() {
-  const { state, toggleTimerActive, setTimer } = useAppContext();
+  const { state } = useAppContext();
+  const { timerDuration, timerActive, toggleTimerActive, setTimer } = useTimerContext();
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const minutes = Math.floor(state.timerDuration / 60);
-  const seconds = state.timerDuration % 60;
+  const minutes = Math.floor(timerDuration / 60);
+  const seconds = timerDuration % 60;
   const timeFormatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  const progressPercent = Math.max(0, Math.min(100, (state.timerDuration / (15 * 60)) * 100));
+  const progressPercent = Math.max(0, Math.min(100, (timerDuration / (15 * 60)) * 100));
 
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -39,7 +41,7 @@ export default function TimerWidget() {
                 toggleTimerActive();
               }}
             >
-              <Ionicons name={state.timerActive ? 'pause' : 'play-outline'} size={16} color="#FFFFFF" />
+              <Ionicons name={timerActive ? 'pause' : 'play-outline'} size={16} color="#FFFFFF" />
             </TouchableOpacity>
             <Ionicons name="chevron-down" size={18} color="#00A3A1" style={{ marginLeft: 8 }} />
           </View>
@@ -66,14 +68,14 @@ export default function TimerWidget() {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.playButton} onPress={toggleTimerActive}>
-          <Ionicons name={state.timerActive ? 'pause' : 'play-outline'} size={18} color="#00A3A1" />
-          <Text style={styles.playButtonText}>{state.timerActive ? t('pause_timer', state.language) : t('start_timer', state.language)}</Text>
+          <Ionicons name={timerActive ? 'pause' : 'play-outline'} size={18} color="#00A3A1" />
+          <Text style={styles.playButtonText}>{timerActive ? t('pause_timer', state.language) : t('start_timer', state.language)}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.resetButton} 
           onPress={() => {
-            if (state.timerActive) toggleTimerActive();
+            if (timerActive) toggleTimerActive();
             setTimer(15 * 60);
           }}
         >

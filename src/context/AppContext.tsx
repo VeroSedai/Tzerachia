@@ -4,7 +4,6 @@ import { Task, AppState, Guide, Recipe } from '../types';
 import * as Linking from 'expo-linking';
 import { importAppStatePayload } from '../utils/syncUtils';
 import { supabase } from '../lib/supabase';
-import { useTimer } from '../hooks/useTimer';
 import { useHouseholdSync } from '../hooks/useHouseholdSync';
 import { useTasks } from '../hooks/useTasks';
 import { useGuidesAndRecipes } from '../hooks/useGuidesAndRecipes';
@@ -35,8 +34,6 @@ interface AppContextProps {
   postponeTaskToFriday: (taskId: string) => void;
   startChallenge: (challengeId: '7-day' | '28-day') => void;
   advanceChallengeDay: () => void;
-  setTimer: (duration: number) => void;
-  toggleTimerActive: () => void;
   toggleChallengeSubtask: (subtaskId: string) => void;
   toggleMonthlyTask: (taskId: string) => void;
   addCustomGuide: (guide: Guide) => void;
@@ -88,8 +85,6 @@ const defaultState: AppState = {
     { id: 'm5', title: 'Decalcificazione Macchina Caffè', completed: false, type: 'monthly' }
   ],
   activeChallenge: null,
-  timerDuration: 15 * 60,
-  timerActive: false,
   customGuides: [],
   customRecipes: [],
   customCategories: [],
@@ -109,7 +104,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const { fetchHousehold } = useHouseholdSync(setState);
-  useTimer(state.timerActive, setState);
   
   const taskActions = useTasks(state, setState);
   const guideAndRecipeActions = useGuidesAndRecipes(setState);
@@ -278,14 +272,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(prev => ({ ...prev, household: null }));
   }, [state.household, state.session]);
 
-  const setTimer = useCallback((duration: number) => {
-    setState(prev => ({ ...prev, timerDuration: duration }));
-  }, []);
-
-  const toggleTimerActive = useCallback(() => {
-    setState(prev => ({ ...prev, timerActive: !prev.timerActive }));
-  }, []);
-
   const toggleNotifications = useCallback(async (enabled: boolean) => {
     await safeSetItem(NOTIFICATIONS_ENABLED_KEY, enabled);
     setState(prev => ({ ...prev, notificationsEnabled: enabled }));
@@ -315,8 +301,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     createHousehold,
     joinHousehold,
     leaveHousehold,
-    setTimer,
-    toggleTimerActive,
     factoryReset,
     toggleNotifications,
     updateReminderTime,
@@ -331,8 +315,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     createHousehold,
     joinHousehold,
     leaveHousehold,
-    setTimer,
-    toggleTimerActive,
     factoryReset,
     toggleNotifications,
     updateReminderTime,

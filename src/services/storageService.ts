@@ -124,8 +124,6 @@ export const loadInitialState = async (
       weeklyTasks,
       monthlyTasks,
       activeChallenge,
-      timerDuration: 15 * 60,
-      timerActive: false,
       customGuides,
       customRecipes,
       customCategories,
