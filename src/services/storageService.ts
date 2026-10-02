@@ -16,62 +16,95 @@ export const LANGUAGE_KEY = '@tzerachia_language';
 export const CUSTOM_TASKS_KEY = '@tzerachia_custom_tasks';
 export const DAILY_COMPLETIONS_BY_DATE_KEY = '@tzerachia_daily_completions_by_date';
 
-export const safeSetItem = async (key: string, value: any) => {
+const ALL_STORAGE_KEYS = [
+  DAILY_KEY,
+  WEEKLY_KEY,
+  MONTHLY_KEY,
+  CHALLENGES_KEY,
+  LAST_DATE_KEY,
+  CUSTOM_GUIDES_KEY,
+  CUSTOM_RECIPES_KEY,
+  CUSTOM_CATEGORIES_KEY,
+  NOTIFICATIONS_ENABLED_KEY,
+  REMINDER_TIME_KEY,
+  LANGUAGE_KEY,
+  CUSTOM_TASKS_KEY,
+  DAILY_COMPLETIONS_BY_DATE_KEY,
+];
+
+/**
+ * Safely persists a value into AsyncStorage with uniform JSON serialization.
+ */
+export const safeSetItem = async <T>(key: string, value: T): Promise<void> => {
   try {
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    const stringValue = JSON.stringify(value);
     await AsyncStorage.setItem(key, stringValue);
   } catch (error) {
-    console.error(`AsyncStorage Save Error for key ${key}:`, error);
+    console.error(`[Storage] Failed to save key "${key}":`, error);
   }
 };
 
-export const safeRemoveItem = async (key: string) => {
+/**
+ * Safely removes an item from AsyncStorage.
+ */
+export const safeRemoveItem = async (key: string): Promise<void> => {
   try {
     await AsyncStorage.removeItem(key);
   } catch (error) {
-    console.error(`AsyncStorage Remove Error for key ${key}:`, error);
+    console.error(`[Storage] Failed to remove key "${key}":`, error);
   }
 };
 
-export const safeClear = async () => {
+/**
+ * Safely clears all AsyncStorage data.
+ */
+export const safeClear = async (): Promise<void> => {
   try {
     await AsyncStorage.clear();
   } catch (error) {
-    console.error("AsyncStorage Clear Error:", error);
+    console.error('[Storage] Failed to clear storage:', error);
   }
 };
 
+/**
+ * Parses raw JSON string with fallback to raw string (handles legacy non-JSON storage).
+ */
+export const safeParse = <T>(str: string | null, fallback: T): T => {
+  if (str === null || str === undefined) return fallback;
+  try {
+    return JSON.parse(str) as T;
+  } catch {
+    // If str was stored as raw unquoted string (e.g. legacy "09:00" or "it")
+    return str as unknown as T;
+  }
+};
+
+/**
+ * Loads all initial state from AsyncStorage in a single native multiGet batch.
+ */
 export const loadInitialState = async (
   setState: React.Dispatch<React.SetStateAction<AppState>>,
   setIsLoaded: React.Dispatch<React.SetStateAction<boolean>>,
   defaultState: AppState
 ) => {
   try {
-    const [dailyStr, weeklyStr, monthlyStr, challengesStr, lastDateStr, customGuidesStr, customRecipesStr, customCategoriesStr, notifEnabledStr, reminderTimeStr, languageStr, customTasksStr, dailyByDateStr] = await Promise.all([
-      AsyncStorage.getItem(DAILY_KEY),
-      AsyncStorage.getItem(WEEKLY_KEY),
-      AsyncStorage.getItem(MONTHLY_KEY),
-      AsyncStorage.getItem(CHALLENGES_KEY),
-      AsyncStorage.getItem(LAST_DATE_KEY),
-      AsyncStorage.getItem(CUSTOM_GUIDES_KEY),
-      AsyncStorage.getItem(CUSTOM_RECIPES_KEY),
-      AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY),
-      AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY),
-      AsyncStorage.getItem(REMINDER_TIME_KEY),
-      AsyncStorage.getItem(LANGUAGE_KEY),
-      AsyncStorage.getItem(CUSTOM_TASKS_KEY),
-      AsyncStorage.getItem(DAILY_COMPLETIONS_BY_DATE_KEY)
-    ]);
+    // Single native bridge transaction for all keys
+    const entries = await AsyncStorage.multiGet(ALL_STORAGE_KEYS);
+    const storageMap = new Map<string, string | null>(entries);
 
-    const safeParse = (str: string | null, fallback: any) => {
-      if (!str) return fallback;
-      try {
-        return JSON.parse(str);
-      } catch (e) {
-        console.error("AsyncStorage Load Error: Failed to parse", str, e);
-        return fallback;
-      }
-    };
+    const dailyStr = storageMap.get(DAILY_KEY) ?? null;
+    const weeklyStr = storageMap.get(WEEKLY_KEY) ?? null;
+    const monthlyStr = storageMap.get(MONTHLY_KEY) ?? null;
+    const challengesStr = storageMap.get(CHALLENGES_KEY) ?? null;
+    const lastDateStr = safeParse<string>(storageMap.get(LAST_DATE_KEY) ?? null, '');
+    const customGuidesStr = storageMap.get(CUSTOM_GUIDES_KEY) ?? null;
+    const customRecipesStr = storageMap.get(CUSTOM_RECIPES_KEY) ?? null;
+    const customCategoriesStr = storageMap.get(CUSTOM_CATEGORIES_KEY) ?? null;
+    const notifEnabledStr = storageMap.get(NOTIFICATIONS_ENABLED_KEY) ?? null;
+    const reminderTimeStr = storageMap.get(REMINDER_TIME_KEY) ?? null;
+    const languageStr = safeParse<string>(storageMap.get(LANGUAGE_KEY) ?? null, defaultState.language);
+    const customTasksStr = storageMap.get(CUSTOM_TASKS_KEY) ?? null;
+    const dailyByDateStr = storageMap.get(DAILY_COMPLETIONS_BY_DATE_KEY) ?? null;
 
     const today = getTodayStr();
     let dailyTasks = safeParse(dailyStr, defaultState.dailyTasks);
@@ -87,29 +120,31 @@ export const loadInitialState = async (
     const language = languageStr === 'en' || languageStr === 'it' ? languageStr : defaultState.language;
     let dailyTasksCompletionsByDate = safeParse(dailyByDateStr, defaultState.dailyTasksCompletionsByDate || {});
 
-    // Prune old completions (> 30 days) to manage local storage memory
+    // Prune old completions (> 30 days) to prevent memory growth
     dailyTasksCompletionsByDate = pruneOldCompletions(dailyTasksCompletionsByDate, 30);
     safeSetItem(DAILY_COMPLETIONS_BY_DATE_KEY, dailyTasksCompletionsByDate).catch(console.error);
-    
-    // Auto Reset Logic
+
+    // Auto-Reset logic if last recorded date is not today
     if (lastDateStr !== today) {
       dailyTasks = dailyTasks.map((t: Task) => ({ ...t, completed: false }));
-      
+
       if (!lastDateStr || !isSameWeek(lastDateStr, today)) {
         weeklyTasks = weeklyTasks.map((t: Task) => ({ ...t, completed: false, postponed: false }));
       }
-      
+
       if (!lastDateStr || !isSameMonth(lastDateStr, today)) {
         monthlyTasks = monthlyTasks.map((t: Task) => ({ ...t, completed: false }));
       }
 
       try {
-        await safeSetItem(LAST_DATE_KEY, today);
-        await safeSetItem(DAILY_KEY, dailyTasks);
-        await safeSetItem(WEEKLY_KEY, weeklyTasks);
-        await safeSetItem(MONTHLY_KEY, monthlyTasks);
+        await AsyncStorage.multiSet([
+          [LAST_DATE_KEY, JSON.stringify(today)],
+          [DAILY_KEY, JSON.stringify(dailyTasks)],
+          [WEEKLY_KEY, JSON.stringify(weeklyTasks)],
+          [MONTHLY_KEY, JSON.stringify(monthlyTasks)],
+        ]);
       } catch (e) {
-        console.error("AsyncStorage Save Error during auto-reset:", e);
+        console.error('[Storage] Error during auto-reset multiSet:', e);
       }
     }
 
@@ -132,7 +167,7 @@ export const loadInitialState = async (
       language,
     });
   } catch (error) {
-    console.error('AsyncStorage Load Error:', error);
+    console.error('[Storage] Load Error in loadInitialState:', error);
   } finally {
     setIsLoaded(true);
   }

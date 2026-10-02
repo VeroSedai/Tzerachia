@@ -1,87 +1,121 @@
+import {
+  format,
+  startOfWeek,
+  startOfMonth,
+  subDays,
+  isSameWeek as dateFnsIsSameWeek,
+  isSameMonth as dateFnsIsSameMonth,
+  parseISO,
+} from 'date-fns';
+import { it as itLocale, enUS as enLocale } from 'date-fns/locale';
+
+const DATE_FORMAT = 'yyyy-MM-dd';
+
+/**
+ * Parses a date input (string or Date) into a valid Date object.
+ */
+const toDate = (input: string | Date): Date => {
+  return typeof input === 'string' ? parseISO(input) : input;
+};
+
+/**
+ * Returns today's date in YYYY-MM-dd format using local device time.
+ */
 export const getTodayStr = (): string => {
-  return new Date().toISOString().split('T')[0];
+  return format(new Date(), DATE_FORMAT);
 };
 
-export const getStartOfWeekStr = (date: Date = new Date()): string => {
-  const d = new Date(date);
-  const day = d.getDay(); // 0 is Sunday, 1 is Monday, ...
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  return monday.toISOString().split('T')[0];
+/**
+ * Returns the Monday of the week for the given date in YYYY-MM-dd format.
+ */
+export const getStartOfWeekStr = (date: Date | string = new Date()): string => {
+  const d = toDate(date);
+  return format(startOfWeek(d, { weekStartsOn: 1 }), DATE_FORMAT);
 };
 
-export const getStartOfMonthStr = (date: Date = new Date()): string => {
-  const d = new Date(date);
-  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
-  return firstDay.toISOString().split('T')[0];
+/**
+ * Returns the first day of the month for the given date in YYYY-MM-dd format.
+ */
+export const getStartOfMonthStr = (date: Date | string = new Date()): string => {
+  const d = toDate(date);
+  return format(startOfMonth(d), DATE_FORMAT);
 };
 
+/**
+ * Checks whether two date strings belong to the same week (starting on Monday).
+ */
 export const isSameWeek = (dateStr1: string, dateStr2: string): boolean => {
   if (!dateStr1 || !dateStr2) return false;
-  return getStartOfWeekStr(new Date(dateStr1)) === getStartOfWeekStr(new Date(dateStr2));
+  return dateFnsIsSameWeek(toDate(dateStr1), toDate(dateStr2), { weekStartsOn: 1 });
 };
 
+/**
+ * Checks whether two date strings belong to the same month and year.
+ */
 export const isSameMonth = (dateStr1: string, dateStr2: string): boolean => {
   if (!dateStr1 || !dateStr2) return false;
-  return dateStr1.substring(0, 7) === dateStr2.substring(0, 7);
+  return dateFnsIsSameMonth(toDate(dateStr1), toDate(dateStr2));
 };
 
+/**
+ * Returns an array of the last N days (including today) formatted as YYYY-MM-dd.
+ */
 export const getLastNDays = (n: number = 15): string[] => {
   const dates: string[] = [];
   const today = new Date();
   for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push(format(subDays(today, i), DATE_FORMAT));
   }
   return dates;
 };
 
-export const formatDateForPicker = (dateStr: string, language: 'it' | 'en'): { label: string; sublabel: string } => {
+/**
+ * Formats a date string for the 15-day history horizontal picker.
+ */
+export const formatDateForPicker = (
+  dateStr: string,
+  language: 'it' | 'en'
+): { label: string; sublabel: string } => {
   const todayStr = getTodayStr();
-  
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = format(subDays(new Date(), 1), DATE_FORMAT);
+  const locale = language === 'it' ? itLocale : enLocale;
+  const dateObj = toDate(dateStr);
 
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  
-  const dayNum = dateObj.getDate().toString();
-  const monthFormatter = new Intl.DateTimeFormat(language === 'it' ? 'it-IT' : 'en-US', { month: 'short' });
-  const weekdayFormatter = new Intl.DateTimeFormat(language === 'it' ? 'it-IT' : 'en-US', { weekday: 'short' });
-
-  const monthName = monthFormatter.format(dateObj);
-  const weekdayName = weekdayFormatter.format(dateObj);
+  const sublabel = format(dateObj, 'd MMM', { locale });
 
   if (dateStr === todayStr) {
     return {
       label: language === 'it' ? 'Oggi' : 'Today',
-      sublabel: `${dayNum} ${monthName}`
+      sublabel,
     };
   }
 
   if (dateStr === yesterdayStr) {
     return {
       label: language === 'it' ? 'Ieri' : 'Yesterday',
-      sublabel: `${dayNum} ${monthName}`
+      sublabel,
     };
   }
 
+  const rawDayName = format(dateObj, 'EEE', { locale });
+  const dayName = rawDayName.charAt(0).toUpperCase() + rawDayName.slice(1);
+
   return {
-    label: weekdayName.charAt(0).toUpperCase() + weekdayName.slice(1, 3),
-    sublabel: `${dayNum} ${monthName}`
+    label: dayName,
+    sublabel,
   };
 };
 
+/**
+ * Prunes task completions older than maxDays (default 30 days) to prevent unbounded storage growth.
+ */
 export const pruneOldCompletions = (
   completionsByDate: Record<string, string[]>,
   maxDays: number = 30
 ): Record<string, string[]> => {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - maxDays);
-  const cutoffStr = cutoffDate.toISOString().split('T')[0];
-
+  const cutoffStr = format(subDays(new Date(), maxDays), DATE_FORMAT);
   const pruned: Record<string, string[]> = {};
+
   for (const [dateKey, taskIds] of Object.entries(completionsByDate)) {
     if (dateKey >= cutoffStr) {
       pruned[dateKey] = taskIds;
