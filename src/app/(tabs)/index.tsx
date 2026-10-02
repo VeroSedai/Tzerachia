@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -185,9 +185,11 @@ export default function TodayScreen() {
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>T</Text>
+              <Image
+                source={require('../../../assets/iconTzerachia.png')}
+                style={styles.logoImage}
+              />
             </View>
-            <Text style={styles.appName}>Tzerachìa</Text>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
@@ -338,19 +340,7 @@ export default function TodayScreen() {
                 <Text style={styles.focusDayName}>{displayDayName}</Text>
               </View>
               {focusTask && !focusTask.postponed ? (
-                <TouchableOpacity
-                  style={styles.focusTaskRow}
-                  onPress={() => handleToggleTask(focusTask.id)}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.focusCheckbox,
-                      focusTask.completed && styles.focusCheckboxCompleted,
-                    ]}
-                  >
-                    {focusTask.completed && <Feather name="check" size={14} color="#FFFFFF" />}
-                  </View>
+                <View style={styles.focusTaskRow}>
                   <Text
                     style={[
                       styles.focusTitle,
@@ -366,7 +356,7 @@ export default function TodayScreen() {
                       </Text>
                     </View>
                   )}
-                </TouchableOpacity>
+                </View>
               ) : (
                 <Text style={styles.focusTitle}>
                   {focusTask ? focusTask.title : t('no_tasks_today', state.language)}
@@ -396,7 +386,7 @@ export default function TodayScreen() {
                         style={styles.guideCard}
                         onPress={() => router.push('/(tabs)/guides')}
                       >
-                        <View style={styles.guideCheckbox} />
+                        <Ionicons name="book-outline" size={15} color="#8A7B66" style={{ marginRight: 8 }} />
                         <Text style={styles.guideText}>
                           {t('open_guide_prefix', state.language)} {focusTask.title}
                         </Text>
@@ -453,18 +443,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.primary,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
-  logoText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  logoImage: {
+    width: 22,
+    height: 22,
+    resizeMode: 'contain',
   },
   appName: {
     fontSize: 20,
@@ -593,9 +583,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: Colors.primaryMuted,
     marginRight: 12,
@@ -691,9 +681,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   focusCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: '#C0B3A0',
     marginRight: 12,
@@ -750,25 +740,15 @@ const styles = StyleSheet.create({
   guideCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#E8DFCC',
-  },
-  guideCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#C0B3A0',
-    marginRight: 10,
+    // No card background or border — clean inline row M3 style
+    paddingVertical: 10,
+    paddingHorizontal: 0,
   },
   guideText: {
+    flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: '#1A2F2F',
+    color: '#3A2E1A',
   },
   postponeButton: {
     flexDirection: 'row',

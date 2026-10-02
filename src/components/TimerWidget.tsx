@@ -115,9 +115,9 @@ const styles = StyleSheet.create({
     color: '#1A2F2F',
   },
   compactTimeText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A2F2F',
     marginLeft: 4,
   },
   compactRight: {
@@ -157,9 +157,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   timeText: {
-    color: '#FFFFFF',
-    fontSize: 54,
-    fontWeight: 'bold',
+    color: '#0D1A1A',
+    fontSize: 60,
+    fontWeight: '800',
+    letterSpacing: -1,
     marginBottom: 16,
   },
   progressBarBg: {

@@ -110,6 +110,7 @@ export const dictionary = {
     ingredients: 'Ingredienti',
     diy_recipe: 'Ricetta fai-da-te',
     confirm_delete: 'Sei sicuro di voler eliminare questo elemento?',
+    no_guides_found: 'Nessuna guida trovata.',
 
     // Challenges
     challenges_header: 'SFIDE DI PULIZIA',
@@ -231,6 +232,7 @@ export const dictionary = {
     ingredients: 'Ingredients',
     diy_recipe: 'DIY Recipe',
     confirm_delete: 'Are you sure you want to delete this item?',
+    no_guides_found: 'No guides found.',
 
     // Challenges
     challenges_header: 'CLEANING CHALLENGES',

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -22,9 +22,13 @@ interface GuideItemProps {
   type: 'recipe' | 'guide';
   language: 'it' | 'en';
   onPress: () => void;
+  isLast: boolean;
 }
 
-const GuideItem = React.memo(({ item, type, language, onPress }: GuideItemProps) => {
+/**
+ * Flat list item - no card border, clean Material 3 style row.
+ */
+const GuideItem = React.memo(({ item, type, language, onPress, isLast }: GuideItemProps) => {
   const subtitle = useMemo(() => {
     if (type === 'recipe') {
       const recipe = item as Recipe;
@@ -36,15 +40,15 @@ const GuideItem = React.memo(({ item, type, language, onPress }: GuideItemProps)
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.listItem, !isLast && styles.listItemDivider]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.6}
     >
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
+      <View style={styles.listItemContent}>
+        <Text style={styles.listItemTitle}>{item.title}</Text>
+        {subtitle ? <Text style={styles.listItemSubtitle}>{subtitle}</Text> : null}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.primaryMuted} />
+      <Ionicons name="chevron-forward" size={18} color={Colors.primaryMuted} />
     </TouchableOpacity>
   );
 });
@@ -69,14 +73,14 @@ export default function GuidesScreen() {
   const sections: GuideSection[] = useMemo(() => {
     const allRecipes = [...defaultRecipes, ...state.customRecipes];
     const allGuides = [...defaultGuides, ...state.customGuides];
-    
-    const filteredRecipes = allRecipes.filter(r => 
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+
+    const filteredRecipes = allRecipes.filter(r =>
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       (!activeCategory || r.category === activeCategory)
     );
-  
-    const filteredGuides = allGuides.filter(g => 
-      g.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+
+    const filteredGuides = allGuides.filter(g =>
+      g.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       (!activeCategory || g.category === activeCategory)
     );
 
@@ -97,19 +101,21 @@ export default function GuidesScreen() {
     });
   }, [router]);
 
-  const renderItem = useCallback(({ item, section }: { item: Recipe | Guide; section: GuideSection }) => {
+  const renderItem = useCallback(({ item, section, index }: { item: Recipe | Guide; section: GuideSection; index: number }) => {
+    const isLast = index === section.data.length - 1;
     return (
-      <GuideItem 
-        item={item} 
-        type={section.type} 
-        language={state.language} 
-        onPress={() => handleOpenItem(item, section.type)} 
+      <GuideItem
+        item={item}
+        type={section.type}
+        language={state.language}
+        onPress={() => handleOpenItem(item, section.type)}
+        isLast={isLast}
       />
     );
   }, [handleOpenItem, state.language]);
 
   const renderSectionHeader = useCallback(({ section }: { section: GuideSection }) => (
-    <Text style={[styles.sectionTitle, { marginTop: section.type === 'recipe' ? 24 : 0 }]}>{section.title}</Text>
+    <Text style={[styles.sectionTitle, { marginTop: section.type === 'recipe' ? 28 : 0 }]}>{section.title}</Text>
   ), []);
 
   return (
@@ -124,45 +130,40 @@ export default function GuidesScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
-            <View style={styles.headerRow}>
-              <View style={styles.logoRow}>
-                <View style={styles.logoCircle}>
-                  <Text style={styles.logoText}>T</Text>
-                </View>
-                <Text style={styles.appName}>Tzerachìa</Text>
+            {/* Compact top app bar: only logo icon + settings */}
+            <View style={styles.topBar}>
+              <View style={styles.logoCircle}>
+                <Image
+                  source={require('../../../assets/iconTzerachia.png')}
+                  style={styles.logoImage}
+                />
               </View>
-              <TouchableOpacity onPress={() => router.push('/settings')}>
-                <Ionicons name="settings-outline" size={24} color="#666" />
+              <TouchableOpacity onPress={() => router.push('/settings')} style={styles.settingsBtn}>
+                <Ionicons name="settings-outline" size={22} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.titleActionRow}>
-              <Text style={styles.screenTitle}>{t('tab_guides', state.language)}</Text>
-              <TouchableOpacity 
-                style={styles.addGuideButton}
-                onPress={() => router.push('/add-guide')}
-              >
-                <Ionicons name="add" size={16} color="#FFFFFF" />
-                <Text style={styles.addGuideButtonText}>{t('add_guide', state.language)}</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Scrolling page title - M3 style large headline */}
+            <Text style={styles.pageTitle}>{t('tab_guides', state.language)}</Text>
 
+            {/* Search bar - filled tonal, no heavy border */}
             <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color="#8A9A9A" style={styles.searchIcon} />
+              <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
                 placeholder={t('search_guides', state.language)}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholderTextColor="#8A9A9A"
+                placeholderTextColor={Colors.textMuted}
               />
               {searchQuery ? (
                 <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={18} color="#8A9A9A" />
+                  <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
                 </TouchableOpacity>
               ) : null}
             </View>
 
+            {/* Category filter chips - filled tonal when active, surface when not */}
             <Text style={styles.categoryHeader}>{t('quick_categories', state.language)}</Text>
             <View style={styles.categoriesRow}>
               {CATEGORIES.map((cat, idx) => {
@@ -170,16 +171,17 @@ export default function GuidesScreen() {
                 return (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.categoryPill, isActive && styles.categoryPillActive]}
+                    style={[styles.categoryChip, isActive && styles.categoryChipActive]}
                     onPress={() => setActiveCategory(isActive ? null : cat.label)}
+                    activeOpacity={0.7}
                   >
-                    <Feather 
-                      name={cat.icon as any} 
-                      size={14} 
-                      color={isActive ? '#FFFFFF' : '#5A6B6B'} 
-                      style={{ marginRight: 6 }} 
+                    <Feather
+                      name={cat.icon as any}
+                      size={13}
+                      color={isActive ? Colors.primary : Colors.textSecondary}
+                      style={{ marginRight: 5 }}
                     />
-                    <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+                    <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
                       {cat.label}
                     </Text>
                   </TouchableOpacity>
@@ -188,7 +190,19 @@ export default function GuidesScreen() {
             </View>
           </>
         }
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>{t('no_guides_found', state.language)}</Text>
+        }
       />
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/add-guide')}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -196,79 +210,58 @@ export default function GuidesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F6F9F9',
+    backgroundColor: '#F4F8FB',
   },
   container: {
     flex: 1,
     paddingHorizontal: 20,
   },
   contentContainer: {
-    paddingBottom: 32,
+    paddingBottom: 96, // Extra bottom padding for FAB clearance
   },
-  headerRow: {
+
+  // --- Top App Bar ---
+  topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
     marginTop: 4,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 20,
   },
   logoCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.primary,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
-  logoText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  logoImage: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
-  appName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A2F2F',
+  settingsBtn: {
+    padding: 4,
   },
-  titleActionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+
+  // --- Page Headline (scrolls with content) ---
+  pageTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1A2F2F',
-    marginBottom: 0,
-  },
-  addGuideButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  addGuideButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginLeft: 4,
-  },
+
+  // --- Search Bar - Filled tonal (no border, surface background) ---
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     marginBottom: 20,
   },
   searchIcon: {
@@ -276,76 +269,108 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: '#1A2F2F',
+    fontSize: 15,
+    color: Colors.textPrimary,
   },
+
+  // --- Category Chips - Filled tonal style ---
   categoryHeader: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#8A9A9A',
-    letterSpacing: 0.5,
-    marginBottom: 12,
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 10,
+    textTransform: 'uppercase',
   },
   categoriesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  categoryPill: {
+  categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 16,
+    // Tonal surface background (no border)
+    backgroundColor: '#E9EEF4',
+    borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
-  categoryPillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+  categoryChipActive: {
+    backgroundColor: Colors.primaryLight,
   },
-  categoryText: {
+  categoryChipText: {
     fontSize: 13,
-    color: '#5A6B6B',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
-  categoryTextActive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  categoryChipTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
   },
+
+  // --- Section Header ---
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#8A9A9A',
-    letterSpacing: 0.5,
-    marginBottom: 12,
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
-  card: {
+
+  // --- Flat List Items (no card, clean rows with dividers) ---
+  listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 4,
   },
-  cardContent: {
+  listItemDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.borderLight,
+  },
+  listItemContent: {
     flex: 1,
-    marginRight: 10,
+    marginRight: 12,
   },
-  cardTitle: {
+  listItemTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1A2F2F',
-    marginBottom: 4,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 2,
   },
-  cardSubtitle: {
+  listItemSubtitle: {
     fontSize: 13,
-    color: '#8A9A9A',
+    color: Colors.textMuted,
+  },
+
+  // --- Empty State ---
+  emptyText: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 40,
+  },
+
+  // --- Floating Action Button ---
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow
+    shadowColor: Colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });
