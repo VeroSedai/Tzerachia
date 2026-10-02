@@ -7,6 +7,7 @@ import { useAppContext } from '../../context/AppContext';
 import { t } from '../../i18n';
 import { Recipe, Guide } from '../../types';
 import { guides as defaultGuides, recipes as defaultRecipes } from '../../data/guidesAndRecipes';
+import { Colors } from '../../constants/theme';
 
 const DEFAULT_CATEGORIES = [
   { label: 'Detergenti Fai-da-te', icon: 'droplet' },
@@ -43,7 +44,7 @@ const GuideItem = React.memo(({ item, type, language, onPress }: GuideItemProps)
         <Text style={styles.cardTitle}>{item.title}</Text>
         {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#A8C3C8" />
+      <Ionicons name="chevron-forward" size={20} color={Colors.primaryMuted} />
     </TouchableOpacity>
   );
 });
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
   addGuideButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -296,14 +297,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   categoryPillActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   categoryText: {
     fontSize: 13,
@@ -327,9 +328,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 20,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     marginBottom: 12,
   },
   cardContent: {

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { Colors } from '../constants/theme';
 
 export default function AddGuideScreen() {
   const router = useRouter();
@@ -164,7 +165,7 @@ export default function AddGuideScreen() {
           ))}
 
           <TouchableOpacity style={styles.addButton} onPress={handleAddItem}>
-            <Feather name="plus" size={16} color="#00A3A1" />
+            <Feather name="plus" size={16} color={Colors.primary} />
             <Text style={styles.addButtonText}>
               Aggiungi {type === 'guide' ? 'passaggio' : 'ingrediente'}
             </Text>
@@ -201,10 +202,10 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#00A3A1',
+    color: Colors.primary,
   },
   saveTextDisabled: {
-    color: '#A8C3C8',
+    color: Colors.primaryMuted,
   },
   container: {
     padding: 20,
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -264,15 +265,15 @@ const styles = StyleSheet.create({
   categoryPill: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 8,
   },
   categoryPillActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   categoryText: {
     fontSize: 13,
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -315,13 +316,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#00A3A1',
+    borderColor: Colors.primary,
     borderStyle: 'dashed',
     borderRadius: 16,
     marginTop: 10,
   },
   addButtonText: {
-    color: '#00A3A1',
+    color: Colors.primary,
     fontWeight: '600',
     marginLeft: 6,
   },

@@ -10,6 +10,7 @@ import { useAppContext } from '../context/AppContext';
 import { useTimerContext } from '../context/TimerContext';
 import { t } from '../i18n';
 import { confirmAction } from '../utils/alertUtils';
+import { Colors } from '../constants/theme';
 
 export default function GuideDetailScreen() {
   const router = useRouter();
@@ -158,7 +159,7 @@ export default function GuideDetailScreen() {
                 <Text style={styles.startButtonText}>{t('start_guided_session', state.language)}</Text>
                 {guideDuration && (
                   <View style={styles.durationBadge}>
-                    <Ionicons name="time-outline" size={12} color="#00A3A1" />
+                    <Ionicons name="time-outline" size={12} color={Colors.primary} />
                     <Text style={styles.durationBadgeText}>{guideDuration}</Text>
                   </View>
                 )}
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     overflow: 'hidden',
   },
   ingredientRow: {
@@ -252,11 +253,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 20,
-    shadowColor: '#00A3A1',
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   durationBadgeText: {
-    color: '#00A3A1',
+    color: Colors.primary,
     fontSize: 12,
     fontWeight: 'bold',
     marginLeft: 4,
@@ -297,14 +298,14 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#A8C3C8',
+    borderColor: Colors.primaryMuted,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxCompleted: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   stepNumber: {
     fontSize: 15,

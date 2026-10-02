@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { useTimerContext } from '../context/TimerContext';
 import { t } from '../i18n';
+import { Colors } from '../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -29,7 +30,7 @@ export default function TimerWidget() {
       <View style={styles.compactContainer}>
         <TouchableOpacity style={styles.compactHeader} onPress={toggleExpand} activeOpacity={0.8}>
           <View style={styles.compactLeft}>
-            <Ionicons name="time-outline" size={18} color="#00A3A1" />
+            <Ionicons name="time-outline" size={18} color={Colors.primary} />
             <Text style={styles.compactTitle}>{t('session_timer', state.language)}</Text>
             <Text style={styles.compactTimeText}>{timeFormatted}</Text>
           </View>
@@ -43,7 +44,7 @@ export default function TimerWidget() {
             >
               <Ionicons name={timerActive ? 'pause' : 'play-outline'} size={16} color="#FFFFFF" />
             </TouchableOpacity>
-            <Ionicons name="chevron-down" size={18} color="#00A3A1" style={{ marginLeft: 8 }} />
+            <Ionicons name="chevron-down" size={18} color={Colors.primary} style={{ marginLeft: 8 }} />
           </View>
         </TouchableOpacity>
       </View>
@@ -68,7 +69,7 @@ export default function TimerWidget() {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.playButton} onPress={toggleTimerActive}>
-          <Ionicons name={timerActive ? 'pause' : 'play-outline'} size={18} color="#00A3A1" />
+          <Ionicons name={timerActive ? 'pause' : 'play-outline'} size={18} color={Colors.primary} />
           <Text style={styles.playButtonText}>{timerActive ? t('pause_timer', state.language) : t('start_timer', state.language)}</Text>
         </TouchableOpacity>
         
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   compactTimeText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#00A3A1',
+    color: Colors.primary,
     marginLeft: 4,
   },
   compactRight: {
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   compactPlayBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -132,11 +133,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     padding: 24,
     marginBottom: 16,
-    shadowColor: '#00A3A1',
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   playButtonText: {
-    color: '#00A3A1',
+    color: Colors.primary,
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,

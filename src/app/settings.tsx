@@ -10,6 +10,7 @@ import { t } from '../i18n';
 import { requestNotificationPermissions, scheduleDailyReminder, cancelAllReminders } from '../services/notificationService';
 import { exportAppStatePayload, shareToTelegram } from '../utils/syncUtils';
 import { confirmAction, showAlert } from '../utils/alertUtils';
+import { Colors } from '../constants/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -192,8 +193,8 @@ export default function SettingsScreen() {
             onPress={() => setSyncModalVisible(true)}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={[styles.iconCircle, { backgroundColor: '#E0F0F0' }]}>
-                <Ionicons name="sync-outline" size={20} color="#00A3A1" />
+              <View style={[styles.iconCircle, { backgroundColor: Colors.primaryLight }]}>
+                <Ionicons name="sync-outline" size={20} color={Colors.primary} />
               </View>
               <View style={{ marginLeft: 12 }}>
                 <Text style={styles.itemTitle}>{t('sync_title', state.language)}</Text>
@@ -269,7 +270,7 @@ export default function SettingsScreen() {
             <Switch
               value={state.notificationsEnabled}
               onValueChange={handleToggleNotifications}
-              trackColor={{ false: '#D0E3E3', true: '#00A3A1' }}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -381,7 +382,7 @@ export default function SettingsScreen() {
             {syncTab === 'telegram' ? (
               <View style={styles.telegramContainer}>
                 <View style={styles.telegramCard}>
-                  <Ionicons name="paper-plane-outline" size={48} color="#00A3A1" />
+                  <Ionicons name="paper-plane-outline" size={48} color={Colors.primary} />
                   <Text style={styles.syncDescTitle}>{t('sync_send_telegram', state.language)}</Text>
                   <Text style={styles.syncDescText}>
                     Invia lo stato delle tue attività su Telegram al tuo partner. Cliccando il link ricevuto, l'app sincronizzerà i progressi.
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
   },
   languageRow: {
     flexDirection: 'row',
@@ -499,8 +500,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0EAE9',
   },
   langBtnActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   langBtnText: {
     fontSize: 14,
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
   timeInput: {
     backgroundColor: '#F0F4F4',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -586,7 +587,7 @@ const styles = StyleSheet.create({
   },
   inviteCode: {
     fontWeight: 'bold',
-    color: '#00A3A1',
+    color: Colors.primary,
     letterSpacing: 1,
   },
   leaveBtn: {
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F0F4F4',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -622,7 +623,7 @@ const styles = StyleSheet.create({
     color: '#1A2F2F',
   },
   actionBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -646,11 +647,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
   },
   syncTabBtnActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   syncTabText: {
     fontSize: 14,
@@ -671,7 +672,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     width: '100%',
   },
   syncDescTitle: {
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
   telegramButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 16,
@@ -725,7 +726,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     marginBottom: 24,
     elevation: 2,
     shadowColor: '#000',
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
   scanButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 16,

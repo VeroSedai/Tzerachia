@@ -9,6 +9,7 @@ import { guides as defaultGuides } from '../../data/guidesAndRecipes';
 import { format, addDays } from 'date-fns';
 import { confirmAction } from '../../utils/alertUtils';
 import { Task } from '../../types';
+import { Colors } from '../../constants/theme';
 
 const DAYS = [
   { short: 'LUN', key: 'Lunedì' },
@@ -90,7 +91,7 @@ const TaskItem = React.memo(function TaskItem({
             style={styles.postponeButton}
             onPress={() => postponeTaskToFriday(item.id)}
           >
-            <Feather name="clock" size={12} color="#00A3A1" />
+            <Feather name="clock" size={12} color={Colors.primary} />
             <Text style={styles.postponeText}>{t('postpone_to_friday', language)}</Text>
           </TouchableOpacity>
         )}
@@ -108,7 +109,7 @@ const TaskItem = React.memo(function TaskItem({
               <View key={task.id} style={styles.catchAllItem}>
                 <Text style={styles.catchAllItemText}>• {task.title} ({task.dayOfWeek})</Text>
                 <TouchableOpacity onPress={() => toggleTask(task.id)}>
-                  <Feather name="check-circle" size={16} color="#00A3A1" />
+                  <Feather name="check-circle" size={16} color={Colors.primary} />
                 </TouchableOpacity>
               </View>
             ))
@@ -241,14 +242,14 @@ export default function ScheduleScreen() {
         {addingForDay === item.index ? (
           <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
             <TextInput
-              style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D0E3E3', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
+              style={{ flex: 1, backgroundColor: '#FFF', borderWidth: 1, borderColor: Colors.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginRight: 8 }}
               placeholder={t('new_extra_placeholder', state.language)}
               value={newCustomTasks[item.index] || ''}
               onChangeText={(text) => setNewCustomTasks(prev => ({ ...prev, [item.index]: text }))}
               onSubmitEditing={() => handleAddCustomTask(item.index)}
               autoFocus
             />
-            <TouchableOpacity onPress={() => handleAddCustomTask(item.index)} style={{ backgroundColor: '#00A3A1', padding: 12, borderRadius: 16 }}>
+            <TouchableOpacity onPress={() => handleAddCustomTask(item.index)} style={{ backgroundColor: Colors.primary, padding: 12, borderRadius: 16 }}>
               <Feather name="check" size={16} color="#FFF" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setAddingForDay(null)} style={{ backgroundColor: '#F0F4F4', padding: 12, borderRadius: 16, marginLeft: 8 }}>
@@ -257,8 +258,8 @@ export default function ScheduleScreen() {
           </View>
         ) : (
           <TouchableOpacity style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }} onPress={() => setAddingForDay(item.index)}>
-            <Feather name="plus" size={16} color="#00A3A1" />
-            <Text style={{ marginLeft: 6, color: '#00A3A1', fontWeight: '600' }}>{t('add_task_btn', state.language)}</Text>
+            <Feather name="plus" size={16} color={Colors.primary} />
+            <Text style={{ marginLeft: 6, color: Colors.primary, fontWeight: '600' }}>{t('add_task_btn', state.language)}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -283,7 +284,7 @@ export default function ScheduleScreen() {
           style={styles.guideBadge}
           onPress={() => handleOpenGuide(task.title)}
         >
-          <Feather name="book-open" size={12} color="#00A3A1" />
+          <Feather name="book-open" size={12} color={Colors.primary} />
           <Text style={styles.guideBadgeText}>Guida</Text>
         </TouchableOpacity>
       </View>
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
   content: { paddingVertical: 16, paddingBottom: 32, paddingHorizontal: 16, flexGrow: 1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, marginTop: 4 },
   headerTitle: { color: '#1A2F2F', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
-  editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E0F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
+  editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.primaryLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, gap: 6 },
   editButtonText: { color: '#1A2F2F', fontSize: 12, fontWeight: '600' },
   segmentContainer: { flexDirection: 'row', backgroundColor: '#E0EAE9', borderRadius: 20, padding: 4, marginBottom: 20 },
   segmentButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 16 },
@@ -412,22 +413,22 @@ const styles = StyleSheet.create({
   daysBarWrapper: { marginBottom: 24 },
   daysBar: { flexDirection: 'row' },
   dayChip: { backgroundColor: '#FFFFFF', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 1, borderColor: '#FFFFFF', elevation: 1, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.05, shadowRadius: 2 },
-  activeDayChip: { backgroundColor: '#00A3A1', borderColor: '#00A3A1' },
+  activeDayChip: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   dayChipText: { color: '#5A6B6B', fontSize: 12, fontWeight: '700' },
   activeDayChipText: { color: '#FFFFFF' },
   dayGroup: { marginBottom: 12 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#D0E3E3' },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: Colors.border },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   leftSection: { flexDirection: 'row', alignItems: 'center' },
-  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#A8C3C8', marginRight: 12, justifyContent: 'center', alignItems: 'center' },
-  checkboxCompleted: { backgroundColor: '#00A3A1', borderColor: '#00A3A1' },
+  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: Colors.primaryMuted, marginRight: 12, justifyContent: 'center', alignItems: 'center' },
+  checkboxCompleted: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   taskTitle: { fontSize: 15, fontWeight: '600', color: '#1A2F2F' },
   completedText: { textDecorationLine: 'line-through', color: '#8E8E93' },
-  postponedTag: { fontSize: 11, color: '#00A3A1', marginTop: 2, fontWeight: '500' },
-  postponeButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#E0F0F0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
-  postponeText: { fontSize: 11, fontWeight: '600', color: '#00A3A1' },
-  guideBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#E0F0F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
-  guideBadgeText: { fontSize: 11, fontWeight: '600', color: '#00A3A1' },
+  postponedTag: { fontSize: 11, color: Colors.primary, marginTop: 2, fontWeight: '500' },
+  postponeButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.primaryLight, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  postponeText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
+  guideBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.primaryLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  guideBadgeText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
   catchAllBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F4F4' },
   catchAllTitle: { fontSize: 12, fontWeight: '700', color: '#5A6B6B', marginBottom: 8 },
   catchAllItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },

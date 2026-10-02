@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAppContext } from '../../context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { t } from '../../i18n';
+import { Colors } from '../../constants/theme';
 
 export default function ChallengesScreen() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function ChallengesScreen() {
         {/* 7-Day Quick Start Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="flash" size={24} color="#7A9A8B" />
+            <Ionicons name="flash" size={24} color={Colors.primary} />
             <Text style={styles.cardTitle}>7-Day Quick Start</Text>
           </View>
           <Text style={styles.cardDescription}>
@@ -71,7 +72,7 @@ export default function ChallengesScreen() {
         {/* 28-Day Challenge Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="calendar-outline" size={24} color="#A8C3C8" />
+            <Ionicons name="calendar-outline" size={24} color={Colors.primaryMuted} />
             <Text style={styles.cardTitle}>28-Day Challenge</Text>
           </View>
           <Text style={styles.cardDescription}>
@@ -86,7 +87,7 @@ export default function ChallengesScreen() {
           )}
 
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: '#A8C3C8' }]} 
+            style={[styles.actionButton, { backgroundColor: Colors.primaryMuted }]} 
             onPress={() => handlePress('28-day')}
           >
             <Text style={styles.actionButtonText}>
@@ -102,7 +103,7 @@ export default function ChallengesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9F9F6',
+    backgroundColor: Colors.background,
   },
   container: {
     padding: 20,
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2C3E35',
+    color: Colors.textPrimary,
     marginBottom: 20,
   },
   card: {
@@ -119,7 +120,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#2C3E35',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: Colors.textPrimary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
@@ -133,35 +136,35 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2C3E35',
+    color: Colors.textPrimary,
     marginLeft: 10,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#556B60',
+    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: 15,
   },
   statusText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#7A9A8B',
+    color: Colors.primary,
     marginBottom: 10,
   },
   progressContainer: {
     height: 8,
-    backgroundColor: '#EAEFEA',
+    backgroundColor: Colors.primaryLight,
     borderRadius: 4,
     marginBottom: 15,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#7A9A8B',
+    backgroundColor: Colors.primary,
     borderRadius: 4,
   },
   actionButton: {
-    backgroundColor: '#7A9A8B',
+    backgroundColor: Colors.primary,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',

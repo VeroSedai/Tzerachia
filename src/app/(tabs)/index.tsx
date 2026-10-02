@@ -13,6 +13,7 @@ import {
   formatDisplayDate,
   getTodayWeekdayName,
 } from '../../utils/dateUtils';
+import { Colors } from '../../constants/theme';
 
 interface DailyTaskItemProps {
   id: string;
@@ -252,7 +253,7 @@ export default function TodayScreen() {
             style={styles.historyBanner}
             onPress={() => setSelectedDate(todayStr)}
           >
-            <Ionicons name="time-outline" size={16} color="#00A3A1" />
+            <Ionicons name="time-outline" size={16} color={Colors.primary} />
             <Text style={styles.historyBannerText}>
               {t('history_prefix', state.language)} {dateString}
             </Text>
@@ -319,7 +320,7 @@ export default function TodayScreen() {
             style={styles.addCustomBtn}
             onPress={() => setIsAddingCustom(true)}
           >
-            <Feather name="plus" size={16} color="#00A3A1" />
+            <Feather name="plus" size={16} color={Colors.primary} />
             <Text style={styles.addCustomBtnText}>{t('add_task_btn', state.language)}</Text>
           </TouchableOpacity>
         )}
@@ -455,7 +456,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -485,13 +486,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerIconBtnActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   datePickerScroll: {
     paddingHorizontal: 20,
@@ -503,13 +504,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     alignItems: 'center',
     minWidth: 70,
   },
   datePillActive: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   datePillLabel: {
     fontSize: 12,
@@ -525,14 +526,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   datePillSublabelActive: {
-    color: '#E0F0F0',
+    color: Colors.primaryLight,
   },
   historyBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F4F4',
+    backgroundColor: Colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#B0DFDE',
+    borderColor: Colors.primaryMuted,
     borderRadius: 16,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -541,12 +542,12 @@ const styles = StyleSheet.create({
   historyBannerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#006665',
+    color: Colors.primaryDark,
     marginLeft: 6,
     flex: 1,
   },
   historyReturnBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -586,7 +587,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 24,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -596,14 +597,14 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#A8C3C8',
+    borderColor: Colors.primaryMuted,
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxCompleted: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   taskTitle: {
     fontSize: 16,
@@ -635,14 +636,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginRight: 8,
   },
   confirmCustomBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     padding: 12,
     borderRadius: 16,
   },
@@ -660,7 +661,7 @@ const styles = StyleSheet.create({
   },
   addCustomBtnText: {
     marginLeft: 6,
-    color: '#00A3A1',
+    color: Colors.primary,
     fontWeight: '600',
   },
   focusSectionTitle: {
@@ -700,8 +701,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   focusCheckboxCompleted: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   focusTitle: {
     fontSize: 24,
@@ -714,14 +715,14 @@ const styles = StyleSheet.create({
     color: '#8A9A9A',
   },
   completedBadge: {
-    backgroundColor: '#E0F0F0',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
     marginLeft: 12,
   },
   completedBadgeText: {
-    color: '#00A3A1',
+    color: Colors.primary,
     fontSize: 10,
     fontWeight: 'bold',
   },

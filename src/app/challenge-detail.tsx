@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
 import { confirmAction, showAlert } from '../utils/alertUtils';
+import { Colors } from '../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -96,7 +97,7 @@ export default function ChallengeDetailScreen() {
                   <Text style={[styles.taskTitle, isAllDone && styles.taskTitleDone]}>{task.title}</Text>
                   <Text style={styles.taskSub}>{completedSubtasks}/{totalSubtasks} completati</Text>
                 </View>
-                <Feather name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#7A9A8B" />
+                <Feather name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.primary} />
               </TouchableOpacity>
 
               {isExpanded && (
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 20,
     padding: 16,
     marginBottom: 20,
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     color: '#8A9A9A',
   },
   badge: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
   taskCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 20,
     marginBottom: 12,
     overflow: 'hidden',
@@ -240,14 +241,14 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#A8C3C8',
+    borderColor: Colors.primaryMuted,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxCompleted: {
-    backgroundColor: '#00A3A1',
-    borderColor: '#00A3A1',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   subtaskTitle: {
     fontSize: 14,
@@ -259,13 +260,13 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
   },
   completeDayBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
     marginTop: 20,
     elevation: 2,
-    shadowColor: '#00A3A1',
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   backBtn: {
-    backgroundColor: '#00A3A1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,

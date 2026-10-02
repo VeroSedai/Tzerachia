@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
+import { Colors } from '../constants/theme';
 
 export default function EditScheduleModal() {
   const router = useRouter();
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#00A3A1',
+    color: Colors.primary,
   },
   container: {
     padding: 20,
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D0E3E3',
+    borderColor: Colors.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,

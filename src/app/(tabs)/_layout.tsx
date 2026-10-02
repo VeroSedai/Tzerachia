@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppContext } from '../../context/AppContext';
 import { t } from '../../i18n';
 
+import { Colors } from '../../constants/theme';
+
 /**
  * Expo Router bottom tab layout for the main 4 application sections.
  */
@@ -16,7 +18,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#00A3A1',
+        tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
