@@ -13,7 +13,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 export default function TimerWidget() {
   const { state } = useAppContext();
   const { timerDuration, timerActive, toggleTimerActive, setTimer } = useTimerContext();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const minutes = Math.floor(timerDuration / 60);
   const seconds = timerDuration % 60;
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   timeText: {
-    color: '#0D1A1A',
+    color: '#FFFFFF',
     fontSize: 60,
     fontWeight: '800',
     letterSpacing: -1,

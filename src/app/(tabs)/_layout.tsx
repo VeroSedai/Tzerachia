@@ -21,14 +21,20 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#8E8E93',
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginTop: 2,
+        },
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: '#D0D0D0',
-          // 64dp content area accommodates icon + label; add actual safe-area inset below
+          // 64dp content area: fits icon (24) + label (12) + padding without clipping
           height: 64 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          paddingTop: 6,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 6,
         },
       }}
     >

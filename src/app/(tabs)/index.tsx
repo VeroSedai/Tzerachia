@@ -443,17 +443,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   logoImage: {
-    width: 22,
-    height: 22,
+    width: 28,
+    height: 28,
     resizeMode: 'contain',
   },
   appName: {
