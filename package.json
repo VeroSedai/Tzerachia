@@ -1,7 +1,7 @@
 {
   "name": "tzerachia",
   "version": "1.0.2",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.9",
     "@expo/vector-icons": "^15.1.1",
@@ -13,9 +13,11 @@
     "date-fns": "^4.4.0",
     "expo": "~57.0.14",
     "expo-camera": "~57.0.3",
+    "expo-constants": "~57.0.20",
     "expo-dev-client": "~57.0.13",
     "expo-linking": "~57.0.6",
     "expo-notifications": "~57.0.12",
+    "expo-router": "~57.0.24",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

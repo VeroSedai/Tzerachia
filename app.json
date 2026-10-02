@@ -38,8 +38,12 @@
           "cameraPermission": "Consenti a Tzerachia di usare la fotocamera per sincronizzare."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-router"
     ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "eas": {
         "projectId": "5d8f7bd2-e233-4165-b612-9c1aa02f36ce"
