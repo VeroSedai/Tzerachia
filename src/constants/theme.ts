@@ -3,25 +3,25 @@
  * Replaces legacy teal with serene celeste and sky tones.
  */
 export const Colors = {
-  // Primary brand celeste extracted from iconTzerachia (#477CA7)
-  primary: '#477CA7',
-  primaryDark: '#37658F',
-  primaryLight: '#E6F4FE',
-  primaryMuted: '#9AB7CB',
+  // Primary brand teal / verde acqua (#00A3A1)
+  primary: '#00A3A1',
+  primaryDark: '#007A78',
+  primaryLight: '#E6F4F4',
+  primaryMuted: '#A8C3C8',
 
   // Borders and subtle dividers
-  border: '#D3E2EE',
-  borderLight: '#E4EDF5',
+  border: '#D0E3E3',
+  borderLight: '#E0EAE9',
 
   // Neutrals and typography
-  textPrimary: '#1E364B',
-  textSecondary: '#5A6E7C',
-  textMuted: '#8E9EAA',
-  background: '#F4F8FB',
+  textPrimary: '#1A2F2F',
+  textSecondary: '#5A6B6B',
+  textMuted: '#8A9A9A',
+  background: '#F6F9F9',
   card: '#FFFFFF',
 
   // Status and accents
-  success: '#477CA7',
+  success: '#00A3A1',
   danger: '#FF6B6B',
   warning: '#F5A623',
   gold: '#8A7B66',
