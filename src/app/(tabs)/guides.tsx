@@ -132,12 +132,6 @@ export default function GuidesScreen() {
           <>
             {/* Compact top app bar: only logo icon + settings */}
             <View style={styles.topBar}>
-              <View style={styles.logoCircle}>
-                <Image
-                  source={require('../../../assets/iconTzerachia.png')}
-                  style={styles.logoImage}
-                />
-              </View>
               <TouchableOpacity onPress={() => router.push('/settings')} style={styles.settingsBtn}>
                 <Ionicons name="settings-outline" size={22} color={Colors.textSecondary} />
               </TouchableOpacity>
@@ -223,7 +217,7 @@ const styles = StyleSheet.create({
   // --- Top App Bar ---
   topBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 4,
     marginBottom: 20,
@@ -237,8 +231,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: 28,
-    height: 28,
+    width: 34,
+    height: 34,
     resizeMode: 'contain',
   },
   settingsBtn: {

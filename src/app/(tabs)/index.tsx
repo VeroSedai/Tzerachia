@@ -186,7 +186,7 @@ export default function TodayScreen() {
           <View style={styles.logoRow}>
             <View style={styles.logoCircle}>
               <Image
-                source={require('../../../assets/iconTzerachia.png')}
+                source={require('../../../assets/new-icon.png')}
                 style={styles.logoImage}
               />
             </View>
@@ -452,8 +452,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   logoImage: {
-    width: 28,
-    height: 28,
+    width: 34,
+    height: 34,
     resizeMode: 'contain',
   },
   appName: {
